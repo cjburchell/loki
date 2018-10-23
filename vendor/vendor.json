@@ -1,0 +1,31 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "UrOY9AlJnuaw7zQ+xHzhK/KpCjU=",
+			"path": "github.com/gorilla/context",
+			"revision": "51ce91d2eaddeca0ef29a71d766bb3634dadf729",
+			"revisionTime": "2018-10-12T15:35:48Z"
+		},
+		{
+			"checksumSHA1": "5wCo38WGUTB0bNRIHzcfs7qEizg=",
+			"path": "github.com/gorilla/handlers",
+			"revision": "350d97a79266938cd77a9192b7d995132d4e2b5b",
+			"revisionTime": "2018-10-12T15:33:34Z"
+		},
+		{
+			"checksumSHA1": "LxxjJ5wWRn4H7Mpt4FIf1hbF7+M=",
+			"path": "github.com/gorilla/mux",
+			"revision": "cb4698366aa625048f3b815af6a0dea8aef9280a",
+			"revisionTime": "2018-06-05T21:15:56Z"
+		},
+		{
+			"checksumSHA1": "+RPbt/bqx8qmTbdc2bL0cjCbVNg=",
+			"path": "github.com/satori/go.uuid",
+			"revision": "36e9d2ebbde5e3f13ab2e25625fd453271d6522e",
+			"revisionTime": "2018-01-03T17:44:51Z"
+		}
+	],
+	"rootPath": "github.com/cjburchell/restmock"
+}
