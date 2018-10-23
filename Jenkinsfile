@@ -1,9 +1,9 @@
 pipeline{
     agent any
     environment {
-            DOCKER_IMAGE = "cjburchell/testserver"
+            DOCKER_IMAGE = "cjburchell/restmock"
             DOCKER_TAG = "${env.BRANCH_NAME}"
-            PROJECT_PATH = "/go/src/github.com/cjburchell/testserver-go"
+            PROJECT_PATH = "/go/src/github.com/cjburchell/restmock"
     }
 
     stages{
