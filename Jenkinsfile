@@ -27,9 +27,11 @@ pipeline{
 
                                     def vetResults = sh returnStdout: true, script:"""go tool vet ${paths}"""
                                     writeFile file: 'vet_results.txt', text: vetResults
+                                    echo vetResults
 
                                     def lintResults = sh returnStdout: true, script:"""golint ${paths}"""
                                     writeFile file: 'lint_results.txt', text: lintResults
+                                    echo lintResults
                                 }
                             }
                         }
@@ -46,6 +48,7 @@ pipeline{
 
                                     def testResults = sh returnStdout: true, script:"""go test -v ${paths}"""
                                     writeFile file: 'test_results.txt', text: testResults
+                                    echo testResults
                                     sh """go2xunit -input test_results.txt > tests.xml"""
                                     sh """cd ${PROJECT_PATH} && ls"""
 
