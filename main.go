@@ -17,16 +17,16 @@ func main() {
 
 	config.Setup("config.json")
 
-	go startHttpTestEndpoints()
+	go startHTTPTestEndpoints()
 
-	startHttpConfigEndpoints()
+	startHTTPConfigEndpoints()
 }
 
 func handleInfo(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func startHttpConfigEndpoints() {
+func startHTTPConfigEndpoints() {
 	r := mux.NewRouter()
 	r.HandleFunc("/info", handleInfo).Methods("GET")
 
@@ -42,7 +42,7 @@ func startHttpConfigEndpoints() {
 	}
 }
 
-func startHttpTestEndpoints() *http.Server {
+func startHTTPTestEndpoints() *http.Server {
 	endpoints, _ := config.GetEndpoints()
 
 	r := mux.NewRouter()
