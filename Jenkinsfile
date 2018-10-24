@@ -88,7 +88,7 @@ pipeline{
 
     post {
                 always {
-                      archiveArtifacts '*results.txt'
+                      //archiveArtifacts '*results.txt'
                       //archiveArtifacts 'tests.xml'
                       //junit allowEmptyResults: true, testResults: 'tests.xml'
                       script{
