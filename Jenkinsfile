@@ -36,7 +36,7 @@ pipeline{
                     }
                 }
 
-                stage('Tests') {
+                /*stage('Tests') {
                     steps {
                         script{
                             docker.withRegistry('https://390282485276.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:redpoint-ecr-credentials') {
@@ -53,7 +53,7 @@ pipeline{
                             }
                         }
                     }
-                }
+                }*/
 
         stage('Build') {
             steps {
