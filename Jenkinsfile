@@ -25,13 +25,8 @@ pipeline{
                                     sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
                                     def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
 
-                                    def vetResults = sh returnStdout: true, script:"""go tool vet ${paths}"""
-                                    writeFile file: 'vet_results.txt', text: vetResults
-                                    echo vetResults
-
-                                    def lintResults = sh returnStdout: true, script:"""golint ${paths}"""
-                                    writeFile file: 'lint_results.txt', text: lintResults
-                                    echo lintResults
+                                    sh """go tool vet ${paths}"""
+                                    sh """golint ${paths}"""
 
                                     warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet'], [parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
                                 }
