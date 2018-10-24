@@ -32,6 +32,8 @@ pipeline{
                                     def lintResults = sh returnStdout: true, script:"""golint ${paths}"""
                                     writeFile file: 'lint_results.txt', text: lintResults
                                     echo lintResults
+
+                                    warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet'], [parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
                                 }
                             }
                         }
