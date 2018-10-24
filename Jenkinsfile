@@ -89,7 +89,7 @@ pipeline{
     post {
                 always {
                       archiveArtifacts '*results.txt'
-                      archiveArtifacts 'tests.xml'
+                      //archiveArtifacts 'tests.xml'
                       //junit allowEmptyResults: true, testResults: 'tests.xml'
                       script{
                           if ( currentBuild.currentResult == "SUCCESS" ) {
