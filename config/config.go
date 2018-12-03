@@ -7,6 +7,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/pkg/errors"
+
 	"github.com/satori/go.uuid"
 )
 
@@ -82,7 +84,7 @@ func UpdateEndpoint(endpoint Endpoint) error {
 		return save(endpoints)
 	}
 
-	return fmt.Errorf("unable to find logger with Id %s", endpoint.ID)
+	return errors.WithStack(fmt.Errorf("unable to find logger with ID %s", endpoint.ID))
 }
 
 // DeleteEndpoint in configuration
@@ -99,7 +101,7 @@ func DeleteEndpoint(id string) error {
 		return save(endpoints)
 	}
 
-	return fmt.Errorf("unable to find logger with Id %s", id)
+	return errors.WithStack(fmt.Errorf("unable to find logger with ID %s", id))
 }
 
 // Setup the configuration
