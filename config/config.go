@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/cjburchell/go-uatu"
+
 	"github.com/pkg/errors"
 )
 
@@ -93,9 +95,11 @@ var configFileName string
 func load() (map[string]Endpoint, error) {
 	loggers := make(map[string]Endpoint)
 	if _, err := os.Stat(configFileName); os.IsNotExist(err) {
+		log.Warnf("Config file %s not found", configFileName)
 		return loggers, nil
 	}
 
+	log.Printf("loading config file %s", configFileName)
 	fileData, err := ioutil.ReadFile(configFileName)
 	if err != nil {
 		return loggers, errors.WithStack(err)
