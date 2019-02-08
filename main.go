@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
@@ -60,7 +61,16 @@ func startHTTPTestEndpoints(port string) {
 				}
 			}
 
-			_, err = w.Write(endpoint.ResponseBody)
+			if endpoint.ContentType == "application/json" {
+				_, err = w.Write(endpoint.ResponseBody)
+			} else {
+				var body string
+				err := json.Unmarshal(endpoint.ResponseBody, &body)
+				if err == nil {
+					_, err = w.Write([]byte(body))
+				}
+			}
+
 			if err != nil {
 				log.Error(err, "Unable to write response")
 			}
