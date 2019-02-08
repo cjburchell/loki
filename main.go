@@ -52,8 +52,8 @@ func startHTTPTestEndpoints(port string) {
 			log.Printf("Send Response: %d %s Body: %s", endpoint.Response, endpoint.ContentType, endpoint.ResponseBody)
 			w.WriteHeader(endpoint.Response)
 			w.Header().Set("Content-Type", endpoint.ContentType)
-			log.Print("Header")
 			if endpoint.Header != nil {
+				log.Print("Header")
 				for key, value := range endpoint.Header {
 					log.Printf("%s %s", endpoint.Response, endpoint.ContentType, endpoint.ResponseBody)
 					w.Header().Set(key, value)
