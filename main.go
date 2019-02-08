@@ -49,13 +49,21 @@ func startHTTPTestEndpoints(port string) {
 
 			log.Print(string(requestDump))
 
+			log.Printf("Send Response: %d %s Body: %s", endpoint.Response, endpoint.ContentType, endpoint.ResponseBody)
 			w.WriteHeader(endpoint.Response)
 			w.Header().Set("Content-Type", endpoint.ContentType)
-			_, err = w.Write([]byte(endpoint.ResponseBody))
+			log.Print("Header")
+			if endpoint.Header != nil {
+				for key, value := range endpoint.Header {
+					log.Printf("%s %s", endpoint.Response, endpoint.ContentType, endpoint.ResponseBody)
+					w.Header().Set(key, value)
+				}
+			}
+
+			_, err = w.Write(endpoint.ResponseBody)
 			if err != nil {
 				log.Error(err, "Unable to write response")
 			}
-
 		}).Methods(endpoint.Method)
 	}
 
