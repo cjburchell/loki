@@ -40,6 +40,7 @@ func startHTTPTestEndpoints(port string) {
 	r := mux.NewRouter()
 
 	for _, endpoint := range endpoints {
+		log.Printf("Loading Endpoint %s %s", endpoint.Method, endpoint.Path)
 		r.HandleFunc(endpoint.Path, func(w http.ResponseWriter, r *http.Request) {
 			requestDump, err := httputil.DumpRequest(r, true)
 			if err != nil {

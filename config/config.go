@@ -13,8 +13,6 @@ import (
 
 // Endpoint configuration
 type Endpoint struct {
-	ID           string            `json:"id"`
-	Description  string            `json:"description"`
 	Path         string            `json:"path"`
 	Method       string            `json:"method"`
 	ResponseBody string            `json:"response_body"`
@@ -52,21 +50,6 @@ func GetEndpoint(id string) (*Endpoint, error) {
 	}
 
 	return nil, nil
-}
-
-// UpdateEndpoint in configuration
-func UpdateEndpoint(endpoint Endpoint) error {
-	endpoints, err := load()
-	if err != nil {
-		return err
-	}
-
-	if _, ok := endpoints[endpoint.ID]; ok {
-		endpoints[endpoint.ID] = endpoint
-		return save(endpoints)
-	}
-
-	return errors.WithStack(fmt.Errorf("unable to find logger with ID %s", endpoint.ID))
 }
 
 // DeleteEndpoint in configuration
