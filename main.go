@@ -7,6 +7,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/cjburchell/tools-go/env"
+
+	"github.com/cjburchell/go-uatu"
+
 	"github.com/cjburchell/restmock/config"
 
 	"github.com/gorilla/handlers"
@@ -14,36 +18,24 @@ import (
 )
 
 func main() {
+	configFile := env.Get("CONFIG_FILE", "config.json")
 
-	config.Setup("config.json")
-
-	go startHTTPTestEndpoints()
-
-	startHTTPConfigEndpoints()
-}
-
-func handleInfo(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
-}
-
-func startHTTPConfigEndpoints() {
-	r := mux.NewRouter()
-	r.HandleFunc("/info", handleInfo).Methods("GET")
-
-	srv := &http.Server{
-		Handler:      r,
-		Addr:         ":8082",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+	err := config.Setup(configFile)
+	if err != nil {
+		log.Fatal(err, "Unable to setup config File")
+		return
 	}
 
-	if err := srv.ListenAndServe(); err != nil {
-		fmt.Printf(err.Error())
-	}
+	port := env.Get("PORT", "8080")
+	startHTTPTestEndpoints(port)
 }
 
-func startHTTPTestEndpoints() *http.Server {
-	endpoints, _ := config.GetEndpoints()
+func startHTTPTestEndpoints(port string) {
+	endpoints, err := config.GetEndpoints()
+	if err != nil {
+		log.Fatal(err, "Unable build endpoints")
+		return
+	}
 
 	r := mux.NewRouter()
 
@@ -51,14 +43,18 @@ func startHTTPTestEndpoints() *http.Server {
 		r.HandleFunc(endpoint.Path, func(w http.ResponseWriter, r *http.Request) {
 			requestDump, err := httputil.DumpRequest(r, true)
 			if err != nil {
-				fmt.Println(err)
+				log.Error(err, "Unable to dump Request")
 			}
 
-			fmt.Println(string(requestDump))
+			log.Print(string(requestDump))
 
 			w.WriteHeader(endpoint.Response)
 			w.Header().Set("Content-Type", endpoint.ContentType)
-			w.Write([]byte(endpoint.ResponseBody))
+			_, err = w.Write([]byte(endpoint.ResponseBody))
+			if err != nil {
+				log.Error(err, "Unable to write response")
+			}
+
 		}).Methods(endpoint.Method)
 	}
 
@@ -66,16 +62,14 @@ func startHTTPTestEndpoints() *http.Server {
 
 	srv := &http.Server{
 		Handler:      loggedRouter,
-		Addr:         ":8088",
+		Addr:         ":" + port,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
 
-	fmt.Println("Started http Server")
+	log.Print("Started http Server on port: " + port)
 
 	if err := srv.ListenAndServe(); err != nil {
-		fmt.Printf(err.Error())
+		fmt.Println(err.Error())
 	}
-
-	return srv
 }

@@ -5,22 +5,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"sync"
 
 	"github.com/pkg/errors"
-
-	"github.com/satori/go.uuid"
 )
 
 // Endpoint configuration
 type Endpoint struct {
-	ID           string `json:"id"`
-	Description  string `json:"description"`
-	Path         string `json:"path"`
-	Method       string `json:"method"`
-	ResponseBody string `json:"response_body"`
-	ContentType  string `json:"content_type"`
-	Response     int    `json:"response"`
+	ID           string            `json:"id"`
+	Description  string            `json:"description"`
+	Path         string            `json:"path"`
+	Method       string            `json:"method"`
+	ResponseBody string            `json:"response_body"`
+	ContentType  string            `json:"content_type"`
+	Response     int               `json:"response"`
+	Header       map[string]string `json:"header"`
 }
 
 // GetEndpoints configuration
@@ -54,26 +52,8 @@ func GetEndpoint(id string) (*Endpoint, error) {
 	return nil, nil
 }
 
-var lock = &sync.Mutex{}
-
-// AddEndpoint in configuration
-func AddEndpoint(endpoint Endpoint) (string, error) {
-	lock.Lock()
-	defer lock.Unlock()
-	endpoint.ID = uuid.Must(uuid.NewV4()).String()
-	endpoints, err := load()
-	if err != nil {
-		return "", err
-	}
-
-	endpoints[endpoint.ID] = endpoint
-	return endpoint.ID, save(endpoints)
-}
-
 // UpdateEndpoint in configuration
 func UpdateEndpoint(endpoint Endpoint) error {
-	lock.Lock()
-	defer lock.Unlock()
 	endpoints, err := load()
 	if err != nil {
 		return err
@@ -89,8 +69,6 @@ func UpdateEndpoint(endpoint Endpoint) error {
 
 // DeleteEndpoint in configuration
 func DeleteEndpoint(id string) error {
-	lock.Lock()
-	defer lock.Unlock()
 	endpoints, err := load()
 	if err != nil {
 		return err
@@ -120,17 +98,17 @@ func load() (map[string]Endpoint, error) {
 
 	fileData, err := ioutil.ReadFile(configFileName)
 	if err != nil {
-		return loggers, err
+		return loggers, errors.WithStack(err)
 	}
 
 	err = json.Unmarshal(fileData, &loggers)
-	return loggers, err
+	return loggers, errors.WithStack(err)
 }
 
 func save(config map[string]Endpoint) error {
 	configJSON, err := json.Marshal(config)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return ioutil.WriteFile(configFileName, configJSON, 0644)
