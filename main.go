@@ -63,6 +63,8 @@ func startHTTPTestEndpoints(port string) {
 
 func HandleEndpoint(endpoint config.Endpoint) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Handling Endpoint %s %s %s", endpoint.Name, endpoint.Method, endpoint.Path)
+
 		requestDump, err := httputil.DumpRequest(r, true)
 		if err != nil {
 			log.Error(err, "Unable to dump Request")
