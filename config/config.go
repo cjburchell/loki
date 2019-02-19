@@ -19,6 +19,8 @@ type Endpoint struct {
 	ContentType  string            `json:"content_type"`
 	Response     int               `json:"response"`
 	Header       map[string]string `json:"header"`
+	Wait         int               `json:"wait"`
+	Name         string            `json:"-"`
 }
 
 // GetEndpoints configuration
@@ -30,7 +32,8 @@ func GetEndpoints() ([]Endpoint, error) {
 
 	endpoints := make([]Endpoint, len(results))
 	index := 0
-	for _, value := range results {
+	for name, value := range results {
+		value.Name = name
 		endpoints[index] = value
 		index++
 	}
