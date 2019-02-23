@@ -19,7 +19,6 @@ type Endpoint struct {
 	ContentType  string            `json:"content_type"`
 	Response     int               `json:"response"`
 	Header       map[string]string `json:"header"`
-	Wait         int               `json:"wait"`
 	Name         string            `json:"-"`
 }
 
