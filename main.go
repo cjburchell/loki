@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/cjburchell/restmock/mock"
+	"github.com/cjburchell/loki/mock"
 	"github.com/cjburchell/tools-go/env"
 
 	"github.com/cjburchell/go-uatu"
 
-	"github.com/cjburchell/restmock/config"
+	"github.com/cjburchell/loki/config"
 )
 
 func main() {
