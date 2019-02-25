@@ -1,105 +1,129 @@
 package mock
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/http/httputil"
 
 	"github.com/cjburchell/go-uatu"
 
 	"github.com/gorilla/mux"
 )
 
-// Endpoint configuration
-type Endpoint struct {
+// endpoint configuration
+type endpoint struct {
 	// Request
 	path   string
 	method string
 
 	// Stuff
-	Reply   *Reply
-	Handler IReplyHandler
-	name    string
-	route   *mux.Route
+	reply        reply
+	handleReply  func(writer http.ResponseWriter, request *http.Request)
+	handleVerify func(writer http.ResponseWriter, request *http.Request)
+	name         string
+	route        *mux.Route
+
+	verify verify
 }
 
-type IReplyHandler interface {
-	Handle(writer http.ResponseWriter, request *http.Request)
+type verify struct {
+	enabled       bool
+	actualCalls   int
+	expectedCalls int
 }
 
-type IReply interface {
-	Body(body interface{}) IReply
-	Content(content string) IReply
-	Code(code int) IReply
-	Header(key, value string) IReply
-	RawBody(body json.RawMessage) IReply
-	FullHeader(header map[string]string) IReply
+func (verify *verify) handle(writer http.ResponseWriter, request *http.Request) {
+	verify.actualCalls++
 }
 
-type Reply struct {
-	responseBody json.RawMessage
-	contentType  string
-	response     int
-	header       map[string]string
+func createDefaultEndpoint(name, path, method string) *endpoint {
+	endpoint := &endpoint{name: name, path: path, method: method}
+	endpoint.reply = reply{response: 200}
+	endpoint.handleReply = endpoint.reply.handle
+
+	verify := verify{}
+	endpoint.verify = verify
+	endpoint.handleVerify = verify.handle
+
+	return endpoint
 }
 
-func (reply *Reply) Handle(w http.ResponseWriter, _ *http.Request) {
-	log.Printf("Send Response: %d %s Body: %s", reply.response, reply.contentType, reply.responseBody)
-	w.WriteHeader(reply.response)
-	w.Header().Set("Content-Type", reply.contentType)
-	if reply.header != nil {
-		log.Print("Header")
-		for key, value := range reply.header {
-			log.Printf("%s %s", key, value)
-			w.Header().Set(key, value)
-		}
+func (endpoint *endpoint) CustomVerify(handler func(writer http.ResponseWriter, request *http.Request)) IEndpoint {
+	endpoint.handleVerify = handler
+	return endpoint
+}
+
+func (endpoint *endpoint) Reply() IReply {
+	return &endpoint.reply
+}
+
+func (endpoint *endpoint) CustomReply(handler func(writer http.ResponseWriter, request *http.Request)) IEndpoint {
+	endpoint.handleReply = handler
+	return endpoint
+}
+
+type IEndpoint interface {
+	Reply() IReply
+	CustomReply(handler func(writer http.ResponseWriter, request *http.Request)) IEndpoint
+	CustomVerify(handler func(writer http.ResponseWriter, request *http.Request)) IEndpoint
+	Once() IEndpoint
+	Never() IEndpoint
+	Times(count int) IEndpoint
+}
+
+func (verify verify) check(endpoint endpoint) error {
+
+	if !verify.enabled {
+		return nil
 	}
 
-	var err error
-	if reply.contentType == "application/json" {
-		_, err = w.Write(reply.responseBody)
-	} else {
-		var body string
-		err := json.Unmarshal(reply.responseBody, &body)
-		if err == nil {
-			_, err = w.Write([]byte(body))
-		}
+	if verify.expectedCalls != verify.actualCalls {
+		return fmt.Errorf("expected %d calls got %d calls in endpoint %s %s %s", verify.expectedCalls, verify.actualCalls, endpoint.name, endpoint.method, endpoint.path)
 	}
 
+	return nil
+}
+
+func (endpoint endpoint) check() error {
+	return endpoint.verify.check(endpoint)
+}
+
+func (endpoint *endpoint) Once() IEndpoint {
+	endpoint.verify.enabled = true
+	endpoint.verify.expectedCalls = 1
+	return endpoint
+}
+
+func (endpoint *endpoint) Never() IEndpoint {
+	endpoint.verify.enabled = true
+	endpoint.verify.expectedCalls = 0
+	return endpoint
+}
+
+func (endpoint *endpoint) Times(count int) IEndpoint {
+	endpoint.verify.enabled = true
+	endpoint.verify.expectedCalls = count
+	return endpoint
+}
+
+func (endpoint *endpoint) handleEndpoint(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Handling endpoint %s %s %s", endpoint.name, endpoint.method, endpoint.path)
+
+	requestDump, err := httputil.DumpRequest(r, true)
 	if err != nil {
-		log.Error(err, "Unable to write response")
-	}
-}
-
-func (reply *Reply) Body(body interface{}) IReply {
-	reply.responseBody, _ = json.Marshal(body)
-	return reply
-}
-
-func (reply *Reply) RawBody(body json.RawMessage) IReply {
-	reply.responseBody = body
-	return reply
-}
-
-func (reply *Reply) Content(content string) IReply {
-	reply.contentType = content
-	return reply
-}
-
-func (reply *Reply) Code(code int) IReply {
-	reply.response = code
-	return reply
-}
-
-func (reply *Reply) Header(key, value string) IReply {
-	if reply.header == nil {
-		reply.header = map[string]string{}
+		log.Error(err, "Unable to dump Request")
 	}
 
-	reply.header[key] = value
-	return reply
-}
+	log.Print(string(requestDump))
 
-func (reply *Reply) FullHeader(header map[string]string) IReply {
-	reply.header = header
-	return reply
+	vars := mux.Vars(r)
+	if len(vars) != 0 {
+		log.Print("Values:")
+		for key, value := range vars {
+			log.Printf("Key: %s, Value: $s", key, value)
+		}
+	}
+
+	endpoint.handleReply(w, r)
+	endpoint.handleVerify(w, r)
 }

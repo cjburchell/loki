@@ -3,7 +3,6 @@ package mock
 import (
 	"fmt"
 	"net/http"
-	"net/http/httputil"
 	"os"
 	"time"
 
@@ -14,16 +13,27 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Server struct {
-	r         *mux.Router
-	srv       *http.Server
-	endpoints []*Endpoint
+type IServer interface {
+	Start(port int)
+	Stop() error
+	Endpoint(name, method, path string) IEndpoint
+	Verify() error
 }
 
-func (s *Server) Start(port int) {
+type server struct {
+	r         *mux.Router
+	srv       *http.Server
+	endpoints []*endpoint
+}
+
+func CreateServer() IServer {
+	return &server{}
+}
+
+func (s *server) Start(port int) {
 	if s.r == nil {
 		s.r = mux.NewRouter()
-		log.Warn("Starting Server with no endpoints")
+		log.Warn("Starting server with no endpoints")
 	}
 
 	loggedRouter := handlers.LoggingHandler(os.Stdout, s.r)
@@ -35,7 +45,7 @@ func (s *Server) Start(port int) {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	log.Printf("Started http Server on port: %d", port)
+	log.Printf("Started http server on port: %d", port)
 
 	go func() {
 		if err := s.srv.ListenAndServe(); err != nil {
@@ -44,57 +54,43 @@ func (s *Server) Start(port int) {
 	}()
 }
 
-func (s *Server) Stop() error {
+func (s *server) Stop() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 	return s.srv.Shutdown(ctx)
 }
 
-func (s *Server) Endpoint(name, method, path string) *Endpoint {
-	endpoint := Endpoint{name: name, path: path, method: method}
+func (s *server) Endpoint(name, method, path string) IEndpoint {
+	newEndpoint := createDefaultEndpoint(name, method, path)
 
 	if s.r == nil {
 		s.r = mux.NewRouter()
 	}
 
-	if len(endpoint.path) == 0 || len(endpoint.method) == 0 {
+	if len(newEndpoint.path) == 0 || len(newEndpoint.method) == 0 {
 		return nil
 	}
 
-	endpoint.Reply = &Reply{}
-	endpoint.Handler = endpoint.Reply
-
-	log.Printf("Loading Endpoint %s %s %s", endpoint.name, endpoint.method, endpoint.path)
-	endpoint.route = s.r.HandleFunc(endpoint.path, handleEndpoint(&endpoint)).Methods(endpoint.method)
+	log.Printf("Loading newEndpoint %s %s %s", newEndpoint.name, newEndpoint.method, newEndpoint.path)
+	newEndpoint.route = s.r.HandleFunc(newEndpoint.path, newEndpoint.handleEndpoint).Methods(newEndpoint.method)
 
 	if s.endpoints == nil {
-		s.endpoints = make([]*Endpoint, 0)
+		s.endpoints = make([]*endpoint, 0)
 	}
 
-	s.endpoints = append(s.endpoints, &endpoint)
+	s.endpoints = append(s.endpoints, newEndpoint)
 
-	return &endpoint
+	return newEndpoint
 }
 
-func handleEndpoint(endpoint *Endpoint) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Handling Endpoint %s %s %s", endpoint.name, endpoint.method, endpoint.path)
+func (s server) Verify() error {
 
-		requestDump, err := httputil.DumpRequest(r, true)
+	for _, endpoint := range s.endpoints {
+		err := endpoint.check()
 		if err != nil {
-			log.Error(err, "Unable to dump Request")
+			return err
 		}
-
-		log.Print(string(requestDump))
-
-		vars := mux.Vars(r)
-		if len(vars) != 0 {
-			log.Print("Values:")
-			for key, value := range vars {
-				log.Printf("Key: %s, Value: $s", key, value)
-			}
-		}
-
-		endpoint.Handler.Handle(w, r)
 	}
+
+	return nil
 }
