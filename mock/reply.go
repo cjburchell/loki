@@ -13,6 +13,7 @@ type IReply interface {
 	Code(code int) IReply
 	Header(key, value string) IReply
 	RawBody(body json.RawMessage) IReply
+	StringBody(body string) IReply
 	FullHeader(header map[string]string) IReply
 }
 
@@ -52,13 +53,18 @@ func (reply *reply) handle(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (reply *reply) Body(body interface{}) IReply {
-	reply.responseBody, _ = json.Marshal(body)
-	return reply
+	bodyBytes, _ := json.Marshal(body)
+	return reply.RawBody(bodyBytes)
 }
 
 func (reply *reply) RawBody(body json.RawMessage) IReply {
 	reply.responseBody = body
+	log.Printf("Setting Reply Body of %s", reply.responseBody)
 	return reply
+}
+
+func (reply *reply) StringBody(body string) IReply {
+	return reply.RawBody([]byte(body))
 }
 
 func (reply *reply) Content(content string) IReply {

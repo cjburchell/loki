@@ -38,7 +38,7 @@ func startHTTPTestEndpoints(port int, endpoints []config.Endpoint) {
 	}
 
 	server.Start(port)
-	defer server.Stop()
+	defer server.Stop(nil)
 
 	// wait for ever
 	ch := make(chan int)

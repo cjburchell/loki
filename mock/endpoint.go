@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/cjburchell/go-uatu"
 
@@ -71,21 +74,14 @@ type IEndpoint interface {
 	Times(count int) IEndpoint
 }
 
-func (verify verify) check(endpoint endpoint) error {
-
+func (verify verify) check(endpoint endpoint, t *testing.T) {
 	if !verify.enabled {
-		return nil
+		assert.Equal(t, verify.expectedCalls, verify.actualCalls, fmt.Sprintf("Expected %d calls got %d calls in endpoint %s %s %s", verify.expectedCalls, verify.actualCalls, endpoint.name, endpoint.method, endpoint.path))
 	}
-
-	if verify.expectedCalls != verify.actualCalls {
-		return fmt.Errorf("expected %d calls got %d calls in endpoint %s %s %s", verify.expectedCalls, verify.actualCalls, endpoint.name, endpoint.method, endpoint.path)
-	}
-
-	return nil
 }
 
-func (endpoint endpoint) check() error {
-	return endpoint.verify.check(endpoint)
+func (endpoint endpoint) check(t *testing.T) {
+	endpoint.verify.check(endpoint, t)
 }
 
 func (endpoint *endpoint) Once() IEndpoint {

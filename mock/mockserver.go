@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"testing"
 	"time"
 
 	"context"
@@ -15,9 +16,9 @@ import (
 
 type IServer interface {
 	Start(port int)
-	Stop() error
+	Stop(t *testing.T)
 	Endpoint(name, method, path string) IEndpoint
-	Verify() error
+	Verify(t *testing.T)
 }
 
 type server struct {
@@ -54,10 +55,16 @@ func (s *server) Start(port int) {
 	}()
 }
 
-func (s *server) Stop() error {
+func (s *server) Stop(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
-	return s.srv.Shutdown(ctx)
+	if err := s.srv.Shutdown(ctx); err != nil {
+		log.Error(err)
+	}
+
+	if t != nil {
+		s.Verify(t)
+	}
 }
 
 func (s *server) Endpoint(name, method, path string) IEndpoint {
@@ -83,14 +90,9 @@ func (s *server) Endpoint(name, method, path string) IEndpoint {
 	return newEndpoint
 }
 
-func (s server) Verify() error {
+func (s server) Verify(t *testing.T) {
 
 	for _, endpoint := range s.endpoints {
-		err := endpoint.check()
-		if err != nil {
-			return err
-		}
+		endpoint.check(t)
 	}
-
-	return nil
 }
