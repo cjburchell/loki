@@ -21,8 +21,8 @@ type endpoint struct {
 
 	// Stuff
 	reply        reply
-	handleReply  func(writer http.ResponseWriter, request *http.Request)
-	handleVerify func(writer http.ResponseWriter, request *http.Request)
+	handleReply  func(reply IReply, request *http.Request)
+	handleVerify func(request *http.Request)
 	name         string
 	route        *mux.Route
 
@@ -42,14 +42,13 @@ type verify struct {
 	expectedCalls int
 }
 
-func (verify *verify) handle(writer http.ResponseWriter, request *http.Request) {
+func (verify *verify) handle(request *http.Request) {
 	verify.actualCalls++
 }
 
 func createDefaultEndpoint(name, method, path string) *endpoint {
 	endpoint := &endpoint{name: name, path: path, method: method}
 	endpoint.reply = reply{response: 200}
-	endpoint.handleReply = endpoint.reply.handle
 
 	verify := verify{}
 	endpoint.verify = verify
@@ -58,7 +57,7 @@ func createDefaultEndpoint(name, method, path string) *endpoint {
 	return endpoint
 }
 
-func (endpoint *endpoint) CustomVerify(handler func(writer http.ResponseWriter, request *http.Request)) IEndpoint {
+func (endpoint *endpoint) CustomVerify(handler func(request *http.Request)) IEndpoint {
 	endpoint.handleVerify = handler
 	return endpoint
 }
@@ -67,15 +66,15 @@ func (endpoint *endpoint) Reply() IReply {
 	return &endpoint.reply
 }
 
-func (endpoint *endpoint) CustomReply(handler func(writer http.ResponseWriter, request *http.Request)) IEndpoint {
+func (endpoint *endpoint) CustomReply(handler func(reply IReply, request *http.Request)) IEndpoint {
 	endpoint.handleReply = handler
 	return endpoint
 }
 
 type IEndpoint interface {
 	Reply() IReply
-	CustomReply(handler func(writer http.ResponseWriter, request *http.Request)) IEndpoint
-	CustomVerify(handler func(writer http.ResponseWriter, request *http.Request)) IEndpoint
+	CustomReply(handler func(reply IReply, request *http.Request)) IEndpoint
+	CustomVerify(handler func(request *http.Request)) IEndpoint
 	Once() IEndpoint
 	Never() IEndpoint
 	Times(count int) IEndpoint
@@ -130,7 +129,13 @@ func (endpoint *endpoint) handleEndpoint(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	endpoint.handleReply(w, r)
-	endpoint.handleVerify(w, r)
+	currentReply := endpoint.reply
+	if endpoint.handleReply != nil {
+		currentReply = reply{response: 200}
+		endpoint.handleReply(&currentReply, r)
+	}
+	currentReply.handle(w)
+
+	endpoint.handleVerify(r)
 
 }

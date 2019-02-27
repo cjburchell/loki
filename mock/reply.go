@@ -26,7 +26,7 @@ type reply struct {
 	header       map[string]string
 }
 
-func (reply *reply) handle(w http.ResponseWriter, _ *http.Request) {
+func (reply *reply) handle(w http.ResponseWriter) {
 	log.Printf("Send Response: %d %s Body: %s", reply.response, reply.contentType, reply.responseBody)
 
 	if reply.header != nil {
