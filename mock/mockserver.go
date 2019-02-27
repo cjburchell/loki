@@ -88,7 +88,7 @@ func (s *server) Endpoint(name, method, path string) IEndpoint {
 	}
 
 	log.Printf("%s: Loading newEndpoint %s %s %s", s.name, newEndpoint.name, newEndpoint.method, newEndpoint.path)
-	newEndpoint.route = s.r.HandleFunc(newEndpoint.path, newEndpoint.handleReply).Methods(newEndpoint.method)
+	newEndpoint.route = s.r.HandleFunc(newEndpoint.path, newEndpoint.handleEndpoint).Methods(newEndpoint.method)
 
 	if s.endpoints == nil {
 		s.endpoints = make([]*endpoint, 0)
