@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+
 	"github.com/cjburchell/loki/mock"
 	"github.com/cjburchell/tools-go/env"
 
@@ -33,8 +35,21 @@ func startHTTPTestEndpoints(port int, endpoints []config.Endpoint) {
 
 	server := mock.CreateServer("Loki")
 
-	for _, endpoint := range endpoints {
-		server.Endpoint(endpoint.Name, endpoint.Method, endpoint.Path).Reply().JsonBody(endpoint.ResponseBody).Content(endpoint.ContentType).Code(endpoint.Response).FullHeader(endpoint.Header)
+	for _, endpointConfig := range endpoints {
+		endpoint := server.Endpoint(endpointConfig.Name, endpointConfig.Method, endpointConfig.Path)
+		reply := endpoint.Reply()
+
+		if endpointConfig.ContentType == "application/json" {
+			reply.JsonBody(endpointConfig.ResponseBody)
+		} else {
+			var body string
+			err := json.Unmarshal(endpointConfig.ResponseBody, &body)
+			if err == nil {
+				reply.StringBody(body)
+			}
+		}
+
+		reply.Content(endpointConfig.ContentType).Code(endpointConfig.Response).FullHeader(endpointConfig.Header)
 	}
 
 	server.Start(port)

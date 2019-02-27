@@ -13,14 +13,14 @@ type IReply interface {
 	Content(content string) IReply
 	Code(code int) IReply
 	Header(key, value string) IReply
-	RawBody(body json.RawMessage) IReply
+	RawBody(body []byte) IReply
 	StringBody(body string) IReply
 	XmlBody(body interface{}) IReply
 	FullHeader(header map[string]string) IReply
 }
 
 type reply struct {
-	responseBody json.RawMessage
+	responseBody []byte
 	contentType  string
 	response     int
 	header       map[string]string
@@ -29,7 +29,9 @@ type reply struct {
 func (reply *reply) handle(w http.ResponseWriter, _ *http.Request) {
 	log.Printf("Send Response: %d %s Body: %s", reply.response, reply.contentType, reply.responseBody)
 	w.WriteHeader(reply.response)
+
 	w.Header().Set("Content-Type", reply.contentType)
+
 	if reply.header != nil {
 		log.Print("Header")
 		for key, value := range reply.header {
@@ -38,19 +40,11 @@ func (reply *reply) handle(w http.ResponseWriter, _ *http.Request) {
 		}
 	}
 
-	var err error
-	if reply.contentType == "application/json" {
-		_, err = w.Write(reply.responseBody)
-	} else {
-		var body string
-		err := json.Unmarshal(reply.responseBody, &body)
-		if err == nil {
-			_, err = w.Write([]byte(body))
+	if reply.responseBody != nil {
+		_, err := w.Write(reply.responseBody)
+		if err != nil {
+			log.Error(err, "Unable to write response")
 		}
-	}
-
-	if err != nil {
-		log.Error(err, "Unable to write response")
 	}
 }
 
@@ -71,7 +65,7 @@ func (reply *reply) XmlBody(body interface{}) IReply {
 	return reply.RawBody([]byte(xml.Header + string(bodyBytes)))
 }
 
-func (reply *reply) RawBody(body json.RawMessage) IReply {
+func (reply *reply) RawBody(body []byte) IReply {
 	reply.responseBody = body
 	log.Printf("Setting Reply Body of %s", reply.responseBody)
 	return reply
