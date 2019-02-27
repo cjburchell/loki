@@ -28,17 +28,18 @@ type reply struct {
 
 func (reply *reply) handle(w http.ResponseWriter, _ *http.Request) {
 	log.Printf("Send Response: %d %s Body: %s", reply.response, reply.contentType, reply.responseBody)
-	w.WriteHeader(reply.response)
-
-	w.Header().Set("Content-Type", reply.contentType)
 
 	if reply.header != nil {
-		log.Print("Header")
 		for key, value := range reply.header {
-			log.Printf("%s %s", key, value)
 			w.Header().Set(key, value)
 		}
 	}
+
+	if len(reply.contentType) != 0 {
+		w.Header().Set("Content-Type", reply.contentType)
+	}
+
+	w.WriteHeader(reply.response)
 
 	if reply.responseBody != nil {
 		_, err := w.Write(reply.responseBody)
