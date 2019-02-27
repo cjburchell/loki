@@ -2,18 +2,20 @@ package mock
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"net/http"
 
 	"github.com/cjburchell/go-uatu"
 )
 
 type IReply interface {
-	Body(body interface{}) IReply
+	JsonBody(body interface{}) IReply
 	Content(content string) IReply
 	Code(code int) IReply
 	Header(key, value string) IReply
 	RawBody(body json.RawMessage) IReply
 	StringBody(body string) IReply
+	XmlBody(body interface{}) IReply
 	FullHeader(header map[string]string) IReply
 }
 
@@ -52,9 +54,21 @@ func (reply *reply) handle(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func (reply *reply) Body(body interface{}) IReply {
-	bodyBytes, _ := json.Marshal(body)
+func (reply *reply) JsonBody(body interface{}) IReply {
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		log.Error(err, "Marshal Json")
+	}
 	return reply.RawBody(bodyBytes)
+}
+
+func (reply *reply) XmlBody(body interface{}) IReply {
+	bodyBytes, err := xml.MarshalIndent(body, "  ", "    ")
+	if err != nil {
+		log.Error(err, "Marshal Json")
+	}
+
+	return reply.RawBody([]byte(xml.Header + string(bodyBytes)))
 }
 
 func (reply *reply) RawBody(body json.RawMessage) IReply {

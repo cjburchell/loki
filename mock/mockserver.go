@@ -2,6 +2,7 @@ package mock
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"testing"
@@ -22,22 +23,30 @@ type IServer interface {
 }
 
 type server struct {
+	name      string
 	r         *mux.Router
 	srv       *http.Server
 	endpoints []*endpoint
 }
 
-func CreateServer() IServer {
-	return &server{}
+func CreateServer(name string) IServer {
+	return &server{name: name}
 }
 
 func (s *server) Start(port int) {
 	if s.r == nil {
 		s.r = mux.NewRouter()
-		log.Warn("Starting server with no endpoints")
+		log.Warnf("%s: Starting server with no endpoints", s.name)
 	}
 
-	loggedRouter := handlers.LoggingHandler(os.Stdout, s.r)
+	loggedRouter := handlers.CustomLoggingHandler(os.Stdout, s.r, func(writer io.Writer, params handlers.LogFormatterParams) {
+		log.Printf("%s: \"%s %s\" Code:%d\n",
+			s.name,
+			params.Request.Method,
+			params.URL.Path,
+			params.StatusCode,
+		)
+	})
 
 	s.srv = &http.Server{
 		Handler:      loggedRouter,
@@ -46,7 +55,7 @@ func (s *server) Start(port int) {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	log.Printf("Started http server on port: %d", port)
+	log.Printf("%s: Started http  server on port: %d", s.name, port)
 
 	go func() {
 		if err := s.srv.ListenAndServe(); err != nil {
@@ -78,8 +87,8 @@ func (s *server) Endpoint(name, method, path string) IEndpoint {
 		return nil
 	}
 
-	log.Printf("Loading newEndpoint %s %s %s", newEndpoint.name, newEndpoint.method, newEndpoint.path)
-	newEndpoint.route = s.r.HandleFunc(newEndpoint.path, newEndpoint.handleEndpoint).Methods(newEndpoint.method)
+	log.Printf("%s: Loading newEndpoint %s %s %s", s.name, newEndpoint.name, newEndpoint.method, newEndpoint.path)
+	newEndpoint.route = s.r.HandleFunc(newEndpoint.path, newEndpoint.handleReply).Methods(newEndpoint.method)
 
 	if s.endpoints == nil {
 		s.endpoints = make([]*endpoint, 0)

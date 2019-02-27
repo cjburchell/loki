@@ -6,9 +6,9 @@ import (
 	"net/http/httputil"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/cjburchell/go-uatu"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/gorilla/mux"
 )
@@ -27,6 +27,13 @@ type endpoint struct {
 	route        *mux.Route
 
 	verify verify
+
+	isVerbose bool
+}
+
+func (endpoint *endpoint) SetVerbose() IEndpoint {
+	endpoint.isVerbose = true
+	return endpoint
 }
 
 type verify struct {
@@ -39,7 +46,7 @@ func (verify *verify) handle(writer http.ResponseWriter, request *http.Request) 
 	verify.actualCalls++
 }
 
-func createDefaultEndpoint(name, path, method string) *endpoint {
+func createDefaultEndpoint(name, method, path string) *endpoint {
 	endpoint := &endpoint{name: name, path: path, method: method}
 	endpoint.reply = reply{response: 200}
 	endpoint.handleReply = endpoint.reply.handle
@@ -72,6 +79,7 @@ type IEndpoint interface {
 	Once() IEndpoint
 	Never() IEndpoint
 	Times(count int) IEndpoint
+	SetVerbose() IEndpoint
 }
 
 func (verify verify) check(endpoint endpoint, t *testing.T) {
@@ -105,21 +113,24 @@ func (endpoint *endpoint) Times(count int) IEndpoint {
 func (endpoint *endpoint) handleEndpoint(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Handling endpoint %s %s %s", endpoint.name, endpoint.method, endpoint.path)
 
-	requestDump, err := httputil.DumpRequest(r, true)
-	if err != nil {
-		log.Error(err, "Unable to dump Request")
-	}
+	if endpoint.isVerbose {
+		requestDump, err := httputil.DumpRequest(r, true)
+		if err != nil {
+			log.Error(err, "Unable to dump Request")
+		}
 
-	log.Print(string(requestDump))
+		log.Print(string(requestDump))
 
-	vars := mux.Vars(r)
-	if len(vars) != 0 {
-		log.Print("Values:")
-		for key, value := range vars {
-			log.Printf("Key: %s, Value: $s", key, value)
+		vars := mux.Vars(r)
+		if len(vars) != 0 {
+			log.Print("Values:")
+			for key, value := range vars {
+				log.Printf("Key: %s, Value: $s", key, value)
+			}
 		}
 	}
 
 	endpoint.handleReply(w, r)
 	endpoint.handleVerify(w, r)
+
 }

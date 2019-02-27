@@ -31,10 +31,10 @@ func main() {
 
 func startHTTPTestEndpoints(port int, endpoints []config.Endpoint) {
 
-	server := mock.CreateServer()
+	server := mock.CreateServer("Loki")
 
 	for _, endpoint := range endpoints {
-		server.Endpoint(endpoint.Name, endpoint.Method, endpoint.Path).Reply().Body(endpoint.ResponseBody).Content(endpoint.ContentType).Code(endpoint.Response).FullHeader(endpoint.Header)
+		server.Endpoint(endpoint.Name, endpoint.Method, endpoint.Path).Reply().JsonBody(endpoint.ResponseBody).Content(endpoint.ContentType).Code(endpoint.Response).FullHeader(endpoint.Header)
 	}
 
 	server.Start(port)
