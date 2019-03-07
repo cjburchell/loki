@@ -39,14 +39,20 @@ func startHTTPTestEndpoints(port int, endpoints []config.Endpoint) {
 		endpoint := server.Endpoint(endpointConfig.Name, endpointConfig.Method, endpointConfig.Path)
 		reply := endpoint.Reply()
 
-		if endpointConfig.ContentType == "application/json" {
-			reply.JsonBody(endpointConfig.ResponseBody)
-		} else {
-			var body string
-			err := json.Unmarshal(endpointConfig.ResponseBody, &body)
-			if err == nil {
-				reply.StringBody(body)
+		if endpointConfig.ResponseBody != nil {
+			if endpointConfig.ContentType == "application/json" {
+				reply.JsonBody(endpointConfig.ResponseBody)
+			} else {
+				var body string
+				err := json.Unmarshal(endpointConfig.ResponseBody, &body)
+				if err == nil {
+					reply.StringBody(body)
+				}
 			}
+		}
+
+		if len(endpointConfig.StringBody) != 0 {
+			reply.StringBody(endpointConfig.StringBody)
 		}
 
 		reply.Content(endpointConfig.ContentType).Code(endpointConfig.Response).FullHeader(endpointConfig.Header)
