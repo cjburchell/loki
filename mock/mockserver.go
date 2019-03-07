@@ -40,7 +40,7 @@ func (s *server) Start(port int) {
 	}
 
 	loggedRouter := handlers.CustomLoggingHandler(os.Stdout, s.r, func(writer io.Writer, params handlers.LogFormatterParams) {
-		log.Printf("%s: \"%s %s\" Code:%d\n",
+		log.Printf("%s: \"%s %s\" Code:%d",
 			s.name,
 			params.Request.Method,
 			params.URL.Path,

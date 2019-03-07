@@ -1,7 +1,9 @@
 package mock
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"testing"
@@ -112,6 +114,26 @@ func (endpoint *endpoint) Times(count int) IEndpoint {
 func (endpoint *endpoint) handleEndpoint(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Handling endpoint %s %s %s", endpoint.name, endpoint.method, endpoint.path)
 
+	var bodyString = ""
+	bodyBytes, err := ioutil.ReadAll(r.Body)
+	if err == nil {
+		bodyString = string(bodyBytes)
+	}
+
+	requestData, _ := json.Marshal(struct {
+		Endpoint    string `json:"endpoint"`
+		Path        string `json:"path"`
+		ContentType string `json:"content_type"`
+		Body        string `json:"body"`
+	}{
+		Endpoint:    endpoint.name,
+		Path:        endpoint.path,
+		Body:        bodyString,
+		ContentType: r.Header.Get("Content-type"),
+	})
+
+	fmt.Printf("Request:%s\n", string(requestData))
+
 	if endpoint.isVerbose {
 		requestDump, err := httputil.DumpRequest(r, true)
 		if err != nil {
@@ -134,8 +156,7 @@ func (endpoint *endpoint) handleEndpoint(w http.ResponseWriter, r *http.Request)
 		currentReply = reply{response: 200}
 		endpoint.handleReply(&currentReply, r)
 	}
+
 	currentReply.handle(w)
-
 	endpoint.handleVerify(r)
-
 }
