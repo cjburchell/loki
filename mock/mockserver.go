@@ -23,14 +23,22 @@ type IServer interface {
 }
 
 type server struct {
-	name      string
-	r         *mux.Router
-	srv       *http.Server
-	endpoints []*endpoint
+	name                     string
+	defaultReply             int
+	partialMockServerAddress string
+	client                   *http.Client
+	r                        *mux.Router
+	srv                      *http.Server
+	endpoints                []*endpoint
 }
 
-func CreateServer(name string) IServer {
-	return &server{name: name}
+func CreateServer(name string, defaultReply int, partialMockServerAddress string) IServer {
+	return &server{
+		name:                     name,
+		defaultReply:             defaultReply,
+		partialMockServerAddress: partialMockServerAddress,
+		client:                   &http.Client{},
+	}
 }
 
 func (s *server) Start(port int) {
@@ -38,6 +46,8 @@ func (s *server) Start(port int) {
 		s.r = mux.NewRouter()
 		log.Warnf("%s: Starting server with no endpoints", s.name)
 	}
+
+	s.r.PathPrefix("/").HandlerFunc(s.DefaultHandler)
 
 	loggedRouter := handlers.CustomLoggingHandler(os.Stdout, s.r, func(writer io.Writer, params handlers.LogFormatterParams) {
 		log.Printf("%s: \"%s %s\" Code:%d",
@@ -62,6 +72,56 @@ func (s *server) Start(port int) {
 			fmt.Println(err.Error())
 		}
 	}()
+}
+
+func (s *server) DefaultHandler(w http.ResponseWriter, r *http.Request) {
+
+	if len(s.partialMockServerAddress) == 0 { // no partial mock
+		w.WriteHeader(s.defaultReply)
+		return
+	}
+
+	req, err := http.NewRequest(r.Method, s.partialMockServerAddress+r.URL.Path, r.Body)
+	if err != nil {
+		log.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	req.Header = r.Header
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		log.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	defer func() {
+		if err := resp.Body.Close(); err != nil{
+			log.Error(err)
+		}
+	}()
+
+	for key, values := range resp.Header {
+		for _, value := range values{
+			w.Header().Set(key, value)
+		}
+	}
+
+	var body []byte
+	_, err = r.Body.Read(body)
+	if err != nil {
+		log.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(resp.StatusCode)
+	_, err = w.Write(body)
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 func (s *server) Stop(t *testing.T) {

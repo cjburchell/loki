@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
 
 	"github.com/cjburchell/loki/mock"
 	"github.com/cjburchell/tools-go/env"
@@ -33,7 +34,9 @@ func main() {
 
 func startHTTPTestEndpoints(port int, endpoints []config.Endpoint) {
 
-	server := mock.CreateServer(env.Get("SERVER_NAME", "Loki"))
+	server := mock.CreateServer(env.Get("SERVER_NAME", "Loki"),
+		env.GetInt("defaultReply", http.StatusBadRequest),
+		env.Get("partialMockServerAddress", ""))
 
 	for _, endpointConfig := range endpoints {
 		endpoint := server.Endpoint(endpointConfig.Name, endpointConfig.Method, endpointConfig.Path)
