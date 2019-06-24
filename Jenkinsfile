@@ -6,6 +6,12 @@ pipeline{
             PROJECT_PATH = "/go/src/github.com/cjburchell/loki"
     }
 
+    parameters {
+                booleanParam(name: 'UnitTests', defaultValue: false, description: 'Should unit tests run?')
+        		booleanParam(name: 'Lint', defaultValue: false, description: 'Should Lint run?')
+            }
+
+
     stages{
         stage('Setup') {
             steps {
@@ -18,6 +24,7 @@ pipeline{
          }
 
         stage('Lint') {
+        when { expression { params.Lint } }
                     steps {
                         script{
                         docker.withRegistry('https://390282485276.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:redpoint-ecr-credentials') {
@@ -35,7 +42,8 @@ pipeline{
                     }
                 }
 
-                /*stage('Tests') {
+                stage('Tests') {
+                when { expression { params.UnitTests } }
                     steps {
                         script{
                             docker.withRegistry('https://390282485276.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:redpoint-ecr-credentials') {
@@ -56,7 +64,7 @@ pipeline{
                             }
                         }
                     }
-                }*/
+                }
 
         stage('Build') {
             steps {
