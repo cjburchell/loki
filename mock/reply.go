@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"net/http"
+	"time"
 
-	"github.com/cjburchell/go-uatu"
+	log "github.com/cjburchell/go-uatu"
 )
 
 type IReply interface {
@@ -17,6 +18,7 @@ type IReply interface {
 	StringBody(body string) IReply
 	XmlBody(body interface{}) IReply
 	FullHeader(header map[string]string) IReply
+	Delay(delayTime int) IReply
 }
 
 type reply struct {
@@ -24,9 +26,16 @@ type reply struct {
 	contentType  string
 	response     int
 	header       map[string]string
+	delay        int
 }
 
 func (reply reply) handle(w http.ResponseWriter) {
+
+	if reply.delay != 0 {
+		log.Printf("Waiting for %sms", reply.delay)
+		time.Sleep(time.Duration(reply.delay) * time.Millisecond)
+	}
+
 	log.Printf("Send Response: %d %s Body: %s", reply.response, reply.contentType, reply.responseBody)
 
 	if reply.header != nil {
@@ -84,6 +93,11 @@ func (reply *reply) Content(content string) IReply {
 func (reply *reply) Code(code int) IReply {
 	reply.response = code
 	return reply
+}
+
+func (r *reply) Delay(delayTime int) IReply {
+	r.delay = delayTime
+	return r
 }
 
 func (reply *reply) Header(key, value string) IReply {

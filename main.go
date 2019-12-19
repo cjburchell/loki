@@ -58,7 +58,7 @@ func startHTTPTestEndpoints(port int, endpoints []config.Endpoint) {
 			reply.StringBody(endpointConfig.StringBody)
 		}
 
-		reply.Content(endpointConfig.ContentType).Code(endpointConfig.Response).FullHeader(endpointConfig.Header)
+		reply.Content(endpointConfig.ContentType).Code(endpointConfig.Response).FullHeader(endpointConfig.Header).Delay(endpointConfig.ReplyDelay)
 	}
 
 	server.Start(port)

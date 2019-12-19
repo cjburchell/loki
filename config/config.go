@@ -21,6 +21,7 @@ type Endpoint struct {
 	Response     int               `json:"response"`
 	Header       map[string]string `json:"header"`
 	Name         string            `json:"-"`
+	ReplyDelay   int               `json:"reply_delay"`
 }
 
 // GetEndpoints configuration
