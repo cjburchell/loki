@@ -3,12 +3,11 @@ package mock
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cjburchell/go-uatu"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"testing"
-
-	"github.com/cjburchell/go-uatu"
 
 	"github.com/stretchr/testify/assert"
 
@@ -132,8 +131,6 @@ func (endpoint *endpoint) handleEndpoint(w http.ResponseWriter, r *http.Request)
 		ContentType: r.Header.Get("Content-type"),
 	})
 
-	fmt.Printf("Request:%s\n", string(requestData))
-
 	if endpoint.isVerbose {
 		requestDump, err := httputil.DumpRequest(r, true)
 		if err != nil {
@@ -158,5 +155,7 @@ func (endpoint *endpoint) handleEndpoint(w http.ResponseWriter, r *http.Request)
 	}
 
 	currentReply.handle(w)
+	fmt.Printf("Request:%s\n", string(requestData))
+
 	endpoint.handleVerify(r)
 }
