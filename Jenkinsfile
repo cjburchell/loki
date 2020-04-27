@@ -2,7 +2,7 @@ pipeline{
     agent any
     environment {
             DOCKER_IMAGE = "cjburchell/loki"
-            DOCKER_TAG = "${env.BRANCH_NAME}"
+            DOCKER_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
             PROJECT_PATH = "/go/src/github.com/cjburchell/loki"
     }
 
@@ -27,7 +27,6 @@ pipeline{
         when { expression { params.Lint } }
                     steps {
                         script{
-                        docker.withRegistry('https://390282485276.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:redpoint-ecr-credentials') {
                                 docker.image('cjburchell/goci:latest').inside("-v ${env.WORKSPACE}:${PROJECT_PATH}"){
                                     sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
                                     def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
@@ -38,7 +37,6 @@ pipeline{
                                     warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet'], [parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
                                 }
                             }
-                        }
                     }
                 }
 
@@ -46,7 +44,6 @@ pipeline{
                 when { expression { params.UnitTests } }
                     steps {
                         script{
-                            docker.withRegistry('https://390282485276.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:redpoint-ecr-credentials') {
                                 docker.image('cjburchell/goci:latest').inside("-v ${env.WORKSPACE}:${PROJECT_PATH}"){
                                     sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
                                     def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
@@ -61,39 +58,35 @@ pipeline{
                                     archiveArtifacts 'tests.xml'
                                     unit allowEmptyResults: true, testResults: 'tests.xml'
                                 }
-                            }
                         }
                     }
                 }
 
-        stage('Build') {
+        stage('Build image') {
             steps {
                 script {
-                    if( env.BRANCH_NAME == "master")
-                    {
-                        docker.build("${DOCKER_IMAGE}").tag("latest")
-                    }
-                    else {
-                        docker.build("${DOCKER_IMAGE}").tag("${DOCKER_TAG}")
+
+                    def image = docker.build("${DOCKER_IMAGE}")
+                    image.tag("${DOCKER_TAG}")
+                    if( env.BRANCH_NAME == "master"){
+                        image.tag("latest")
                     }
                 }
             }
         }
 
-        stage ('Push') {
+        stage ('Push image') {
             steps {
                 script {
-                    docker.withRegistry('https://390282485276.dkr.ecr.us-east-1.amazonaws.com', 'ecr:us-east-1:redpoint-ecr-credentials') {
-                            if( env.BRANCH_NAME == "master")
-                            {
-                                docker.image("${DOCKER_IMAGE}").push("latest")
-                            }
-                            else {
-                                docker.image("${DOCKER_IMAGE}").push("${DOCKER_TAG}")
-                            }
+                    docker.withRegistry('', 'dockerhub') {
+                        def image = docker.image("${DOCKER_IMAGE}")
+                        image.push("${DOCKER_TAG}")
+                        if( env.BRANCH_NAME == "master") {
+                            image.push("latest")
                         }
                     }
                 }
+            }
         }
     }
 
