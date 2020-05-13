@@ -10,11 +10,12 @@ import (
 
 	"context"
 
-	"github.com/cjburchell/go-uatu"
+	"github.com/cjburchell/uatu-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
+// IServer interface
 type IServer interface {
 	Start(port int)
 	Stop(t *testing.T)
@@ -30,27 +31,30 @@ type server struct {
 	r                        *mux.Router
 	srv                      *http.Server
 	endpoints                []*endpoint
+	log                      log.ILog
 }
 
-func CreateServer(name string, defaultReply int, partialMockServerAddress string) IServer {
+// CreateServer creates the server
+func CreateServer(name string, defaultReply int, partialMockServerAddress string, log log.ILog) IServer {
 	return &server{
 		name:                     name,
 		defaultReply:             defaultReply,
 		partialMockServerAddress: partialMockServerAddress,
 		client:                   &http.Client{},
+		log: log,
 	}
 }
 
 func (s *server) Start(port int) {
 	if s.r == nil {
 		s.r = mux.NewRouter()
-		log.Warnf("%s: Starting server with no endpoints", s.name)
+		s.log.Warnf("%s: Starting server with no endpoints", s.name)
 	}
 
 	s.r.PathPrefix("/").HandlerFunc(s.DefaultHandler)
 
 	loggedRouter := handlers.CustomLoggingHandler(os.Stdout, s.r, func(writer io.Writer, params handlers.LogFormatterParams) {
-		log.Printf("%s: \"%s %s\" Code:%d",
+		s.log.Printf("%s: \"%s %s\" Code:%d",
 			s.name,
 			params.Request.Method,
 			params.URL.Path,
@@ -65,7 +69,7 @@ func (s *server) Start(port int) {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	log.Printf("%s: Started http  server on port: %d", s.name, port)
+	s.log.Printf("%s: Started http  server on port: %d", s.name, port)
 
 	go func() {
 		if err := s.srv.ListenAndServe(); err != nil {
@@ -83,7 +87,7 @@ func (s *server) DefaultHandler(w http.ResponseWriter, r *http.Request) {
 
 	req, err := http.NewRequest(r.Method, s.partialMockServerAddress+r.URL.Path, r.Body)
 	if err != nil {
-		log.Error(err)
+		s.log.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -92,14 +96,14 @@ func (s *server) DefaultHandler(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		log.Error(err)
+		s.log.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	defer func() {
 		if err := resp.Body.Close(); err != nil{
-			log.Error(err)
+			s.log.Error(err)
 		}
 	}()
 
@@ -112,7 +116,7 @@ func (s *server) DefaultHandler(w http.ResponseWriter, r *http.Request) {
 	var body []byte
 	_, err = r.Body.Read(body)
 	if err != nil {
-		log.Error(err)
+		s.log.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -120,7 +124,7 @@ func (s *server) DefaultHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(resp.StatusCode)
 	_, err = w.Write(body)
 	if err != nil {
-		log.Error(err)
+		s.log.Error(err)
 	}
 }
 
@@ -128,7 +132,7 @@ func (s *server) Stop(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 	if err := s.srv.Shutdown(ctx); err != nil {
-		log.Error(err)
+		s.log.Error(err)
 	}
 
 	if t != nil {
@@ -137,7 +141,7 @@ func (s *server) Stop(t *testing.T) {
 }
 
 func (s *server) Endpoint(name, method, path string) IEndpoint {
-	newEndpoint := createDefaultEndpoint(name, method, path)
+	newEndpoint := createDefaultEndpoint(name, method, path, s.log)
 
 	if s.r == nil {
 		s.r = mux.NewRouter()
@@ -147,7 +151,7 @@ func (s *server) Endpoint(name, method, path string) IEndpoint {
 		return nil
 	}
 
-	log.Printf("%s: Loading newEndpoint %s %s %s", s.name, newEndpoint.name, newEndpoint.method, newEndpoint.path)
+	s.log.Printf("%s: Loading newEndpoint %s %s %s", s.name, newEndpoint.name, newEndpoint.method, newEndpoint.path)
 	newEndpoint.route = s.r.HandleFunc(newEndpoint.path, newEndpoint.handleEndpoint).Methods(newEndpoint.method)
 
 	if s.endpoints == nil {

@@ -2,41 +2,43 @@ package main
 
 import (
 	"encoding/json"
-	"net/http"
-
 	"github.com/cjburchell/loki/mock"
+	"github.com/cjburchell/settings-go"
 	"github.com/cjburchell/tools-go/env"
-
-	"github.com/cjburchell/go-uatu"
+	log "github.com/cjburchell/uatu-go"
+	"net/http"
 
 	"github.com/cjburchell/loki/config"
 )
 
 func main() {
-	configFile := env.Get("CONFIG_FILE", "config.json")
+	set := settings.Get(env.Get("SettingsFile", ""))
+	logger := log.Create(set)
+
+	configFile := set.Get("CONFIG_FILE", "config.json")
 
 	err := config.Setup(configFile)
 	if err != nil {
-		log.Fatal(err, "Unable to setup config File")
+		logger.Fatal(err, "Unable to setup config File")
 		return
 	}
 
-	port := env.GetInt("PORT", 8080)
+	port := set.GetInt("PORT", 8080)
 
-	endpoints, err := config.GetEndpoints()
+	endpoints, err := config.GetEndpoints(logger)
 	if err != nil {
-		log.Fatal(err, "Unable build endpoints")
+		logger.Fatal(err, "Unable build endpoints")
 		return
 	}
 
-	startHTTPTestEndpoints(port, endpoints)
+	startHTTPTestEndpoints(port, endpoints, logger, set)
 }
 
-func startHTTPTestEndpoints(port int, endpoints []config.Endpoint) {
+func startHTTPTestEndpoints(port int, endpoints []config.Endpoint, log log.ILog, settings settings.ISettings) {
 
-	server := mock.CreateServer(env.Get("SERVER_NAME", "Loki"),
-		env.GetInt("defaultReply", http.StatusBadRequest),
-		env.Get("partialMockServerAddress", ""))
+	server := mock.CreateServer(settings.Get("SERVER_NAME", "Loki"),
+		settings.GetInt("defaultReply", http.StatusBadRequest),
+		settings.Get("partialMockServerAddress", ""), log)
 
 	for _, endpointConfig := range endpoints {
 		endpoint := server.Endpoint(endpointConfig.Name, endpointConfig.Method, endpointConfig.Path)
@@ -44,7 +46,7 @@ func startHTTPTestEndpoints(port int, endpoints []config.Endpoint) {
 
 		if endpointConfig.ResponseBody != nil {
 			if endpointConfig.ContentType == "application/json" {
-				reply.JsonBody(endpointConfig.ResponseBody)
+				reply.JSONBody(endpointConfig.ResponseBody)
 			} else {
 				var body string
 				err := json.Unmarshal(endpointConfig.ResponseBody, &body)

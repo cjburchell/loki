@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/cjburchell/go-uatu"
+	"github.com/cjburchell/uatu-go"
 
 	"github.com/pkg/errors"
 )
@@ -25,8 +25,8 @@ type Endpoint struct {
 }
 
 // GetEndpoints configuration
-func GetEndpoints() ([]Endpoint, error) {
-	results, err := load()
+func GetEndpoints(log log.ILog) ([]Endpoint, error) {
+	results, err := load(log)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +43,8 @@ func GetEndpoints() ([]Endpoint, error) {
 }
 
 // GetEndpoint with given ID
-func GetEndpoint(id string) (*Endpoint, error) {
-	results, err := load()
+func GetEndpoint(id string, log log.ILog) (*Endpoint, error) {
+	results, err := load(log)
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +57,8 @@ func GetEndpoint(id string) (*Endpoint, error) {
 }
 
 // DeleteEndpoint in configuration
-func DeleteEndpoint(id string) error {
-	endpoints, err := load()
+func DeleteEndpoint(id string, log log.ILog) error {
+	endpoints, err := load(log)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func Setup(file string) error {
 
 var configFileName string
 
-func load() (map[string]Endpoint, error) {
+func load(log log.ILog) (map[string]Endpoint, error) {
 	loggers := make(map[string]Endpoint)
 	if _, err := os.Stat(configFileName); os.IsNotExist(err) {
 		log.Warnf("Config file %s not found", configFileName)

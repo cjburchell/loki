@@ -6,12 +6,6 @@ pipeline{
             PROJECT_PATH = "/go/src/github.com/cjburchell/loki"
     }
 
-    parameters {
-                booleanParam(name: 'UnitTests', defaultValue: false, description: 'Should unit tests run?')
-        		booleanParam(name: 'Lint', defaultValue: false, description: 'Should Lint run?')
-            }
-
-
     stages{
         stage('Setup') {
             steps {
@@ -21,46 +15,44 @@ pipeline{
              /* Let's make sure we have the repository cloned to our workspace */
              checkout scm
              }
-         }
-
-        stage('Lint') {
-        when { expression { params.Lint } }
-                    steps {
-                        script{
-                                docker.image('cjburchell/goci:latest').inside("-v ${env.WORKSPACE}:${PROJECT_PATH}"){
-                                    sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
-                                    def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
-
-                                    sh """go tool vet ${paths}"""
-                                    sh """golint ${paths}"""
-
-                                    warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet'], [parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
-                                }
-                            }
+        }
+        stage('Static Analysis') {
+            parallel {
+                stage('Vet') {
+                    agent {
+                        docker {
+                            image 'cjburchell/goci:1.14'
+                            args '-v $WORKSPACE:$PROJECT_PATH'
+                        }
                     }
-                }
-
-                stage('Tests') {
-                when { expression { params.UnitTests } }
                     steps {
                         script{
-                                docker.image('cjburchell/goci:latest').inside("-v ${env.WORKSPACE}:${PROJECT_PATH}"){
-                                    sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
-                                    def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
+                                sh """go vet ./..."""
 
-                                    def testResults = sh returnStdout: true, script:"""go test -v ${paths}"""
-                                    writeFile file: 'test_results.txt', text: testResults
-                                    echo testResults
-                                    sh """go2xunit -input test_results.txt > tests.xml"""
-                                    sh """cd ${PROJECT_PATH} && ls"""
-
-                                    archiveArtifacts 'test_results.txt'
-                                    archiveArtifacts 'tests.xml'
-                                    unit allowEmptyResults: true, testResults: 'tests.xml'
-                                }
+                                def checkVet = scanForIssues tool: [$class: 'GoVet']
+                                publishIssues issues:[checkVet]
                         }
                     }
                 }
+
+                stage('Lint') {
+                    agent {
+                        docker {
+                            image 'cjburchell/goci:1.14'
+                            args '-v $WORKSPACE:$PROJECT_PATH'
+                        }
+                    }
+                    steps {
+                        script{
+                            sh """golint ./..."""
+
+                            def checkLint = scanForIssues tool: [$class: 'GoLint']
+                            publishIssues issues:[checkLint]
+                        }
+                    }
+                }
+            }
+        }
 
         stage('Build image') {
             steps {

@@ -1,4 +1,4 @@
-FROM golang:1.12 as serverbuilder
+FROM golang:1.14 as serverbuilder
 WORKDIR /loki
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main

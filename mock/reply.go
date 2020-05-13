@@ -3,20 +3,20 @@ package mock
 import (
 	"encoding/json"
 	"encoding/xml"
+	log "github.com/cjburchell/uatu-go"
 	"net/http"
 	"time"
-
-	log "github.com/cjburchell/go-uatu"
 )
 
+// IReply interface
 type IReply interface {
-	JsonBody(body interface{}) IReply
+	JSONBody(body interface{}) IReply
 	Content(content string) IReply
 	Code(code int) IReply
 	Header(key, value string) IReply
 	RawBody(body []byte) IReply
 	StringBody(body string) IReply
-	XmlBody(body interface{}) IReply
+	XMLBody(body interface{}) IReply
 	FullHeader(header map[string]string) IReply
 	Delay(delayTime int) IReply
 }
@@ -27,16 +27,17 @@ type reply struct {
 	response     int
 	header       map[string]string
 	delay        int
+	log          log.ILog
 }
 
 func (reply reply) handle(w http.ResponseWriter) {
 
 	if reply.delay != 0 {
-		log.Printf("Waiting for %sms", reply.delay)
+		reply.log.Printf("Waiting for %sms", reply.delay)
 		time.Sleep(time.Duration(reply.delay) * time.Millisecond)
 	}
 
-	log.Printf("Send Response: %d %s Body: %s", reply.response, reply.contentType, reply.responseBody)
+	reply.log.Printf("Send Response: %d %s Body: %s", reply.response, reply.contentType, reply.responseBody)
 
 	if reply.header != nil {
 		for key, value := range reply.header {
@@ -53,23 +54,23 @@ func (reply reply) handle(w http.ResponseWriter) {
 	if reply.responseBody != nil {
 		_, err := w.Write(reply.responseBody)
 		if err != nil {
-			log.Error(err, "Unable to write response")
+			reply.log.Error(err, "Unable to write response")
 		}
 	}
 }
 
-func (reply *reply) JsonBody(body interface{}) IReply {
+func (reply *reply) JSONBody(body interface{}) IReply {
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
-		log.Error(err, "Marshal Json")
+		reply.log.Error(err, "Marshal Json")
 	}
 	return reply.RawBody(bodyBytes)
 }
 
-func (reply *reply) XmlBody(body interface{}) IReply {
+func (reply *reply) XMLBody(body interface{}) IReply {
 	bodyBytes, err := xml.MarshalIndent(body, "  ", "    ")
 	if err != nil {
-		log.Error(err, "Marshal Json")
+		reply.log.Error(err, "Marshal Json")
 	}
 
 	return reply.RawBody([]byte(xml.Header + string(bodyBytes)))
@@ -77,7 +78,7 @@ func (reply *reply) XmlBody(body interface{}) IReply {
 
 func (reply *reply) RawBody(body []byte) IReply {
 	reply.responseBody = body
-	log.Printf("Setting Reply Body of %s", reply.responseBody)
+	reply.log.Printf("Setting Reply Body of %s", reply.responseBody)
 	return reply
 }
 
@@ -95,9 +96,9 @@ func (reply *reply) Code(code int) IReply {
 	return reply
 }
 
-func (r *reply) Delay(delayTime int) IReply {
-	r.delay = delayTime
-	return r
+func (reply *reply) Delay(delayTime int) IReply {
+	reply.delay = delayTime
+	return reply
 }
 
 func (reply *reply) Header(key, value string) IReply {

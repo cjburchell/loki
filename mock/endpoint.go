@@ -3,7 +3,7 @@ package mock
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cjburchell/go-uatu"
+	"github.com/cjburchell/uatu-go"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -27,6 +27,8 @@ type endpoint struct {
 	name         string
 	route        *mux.Route
 
+	log log.ILog
+
 	verify verify
 
 	isVerbose bool
@@ -47,8 +49,8 @@ func (verify *verify) handle(request *http.Request) {
 	verify.actualCalls++
 }
 
-func createDefaultEndpoint(name, method, path string) *endpoint {
-	endpoint := &endpoint{name: name, path: path, method: method}
+func createDefaultEndpoint(name, method, path string, log log.ILog) *endpoint {
+	endpoint := &endpoint{name: name, path: path, method: method, log: log}
 	endpoint.reply = reply{response: 200}
 
 	verify := verify{}
@@ -72,6 +74,7 @@ func (endpoint *endpoint) CustomReply(handler func(reply IReply, request *http.R
 	return endpoint
 }
 
+// IEndpoint interface
 type IEndpoint interface {
 	Reply() IReply
 	CustomReply(handler func(reply IReply, request *http.Request)) IEndpoint
@@ -111,7 +114,7 @@ func (endpoint *endpoint) Times(count int) IEndpoint {
 }
 
 func (endpoint *endpoint) handleEndpoint(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Handling endpoint %s %s %s", endpoint.name, endpoint.method, endpoint.path)
+	endpoint.log.Printf("Handling endpoint %s %s %s", endpoint.name, endpoint.method, endpoint.path)
 
 	var bodyString = ""
 	bodyBytes, err := ioutil.ReadAll(r.Body)
@@ -134,16 +137,16 @@ func (endpoint *endpoint) handleEndpoint(w http.ResponseWriter, r *http.Request)
 	if endpoint.isVerbose {
 		requestDump, err := httputil.DumpRequest(r, true)
 		if err != nil {
-			log.Error(err, "Unable to dump Request")
+			endpoint.log.Error(err, "Unable to dump Request")
 		}
 
-		log.Print(string(requestDump))
+		endpoint.log.Print(string(requestDump))
 
 		vars := mux.Vars(r)
 		if len(vars) != 0 {
-			log.Print("Values:")
+			endpoint.log.Print("Values:")
 			for key, value := range vars {
-				log.Printf("Key: %s, Value: $s", key, value)
+				endpoint.log.Printf("Key: %s, Value: $s", key, value)
 			}
 		}
 	}
