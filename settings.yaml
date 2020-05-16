@@ -1,0 +1,9 @@
+Logging:
+  ServiceName: "Loki"
+  MinLogLevel: Debug
+  LogToConsole: true
+
+ConfigFile: config.json
+Port: 8080
+DefaultReply: 400
+PartialMockServerAddress: ""

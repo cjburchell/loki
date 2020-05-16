@@ -2,20 +2,22 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/cjburchell/loki/mock"
 	"github.com/cjburchell/settings-go"
 	"github.com/cjburchell/tools-go/env"
 	log "github.com/cjburchell/uatu-go"
-	"net/http"
+	logSettings "github.com/cjburchell/uatu-go/settings"
 
 	"github.com/cjburchell/loki/config"
 )
 
 func main() {
-	set := settings.Get(env.Get("SettingsFile", ""))
-	logger := log.Create(set)
+	set := settings.Get(env.Get("SettingsFile", "settings.yaml"))
+	logger := log.Create(logSettings.Get(set.GetSection("Logging")))
 
-	configFile := set.Get("CONFIG_FILE", "config.json")
+	configFile := set.Get("ConfigFile", "config.json")
 
 	err := config.Setup(configFile)
 	if err != nil {
@@ -23,7 +25,7 @@ func main() {
 		return
 	}
 
-	port := set.GetInt("PORT", 8080)
+	port := set.GetInt("Port", 8080)
 
 	endpoints, err := config.GetEndpoints(logger)
 	if err != nil {
@@ -36,9 +38,9 @@ func main() {
 
 func startHTTPTestEndpoints(port int, endpoints []config.Endpoint, log log.ILog, settings settings.ISettings) {
 
-	server := mock.CreateServer(settings.Get("SERVER_NAME", "Loki"),
-		settings.GetInt("defaultReply", http.StatusBadRequest),
-		settings.Get("partialMockServerAddress", ""), log)
+	server := mock.CreateServer(settings.Get("ServerName", "Loki"),
+		settings.GetInt("DefaultReply", http.StatusBadRequest),
+		settings.Get("PartialMockServerAddress", ""), log)
 
 	for _, endpointConfig := range endpoints {
 		endpoint := server.Endpoint(endpointConfig.Name, endpointConfig.Method, endpointConfig.Path)
