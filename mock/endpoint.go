@@ -51,7 +51,7 @@ func (verify *verify) handle(request *http.Request) {
 
 func createDefaultEndpoint(name, method, path string, log log.ILog) *endpoint {
 	endpoint := &endpoint{name: name, path: path, method: method, log: log}
-	endpoint.reply = reply{response: 200}
+	endpoint.reply = reply{response: 200, log: log}
 
 	verify := verify{}
 	endpoint.verify = verify
