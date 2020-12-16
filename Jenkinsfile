@@ -4,6 +4,9 @@ pipeline{
             DOCKER_IMAGE = "cjburchell/loki"
             DOCKER_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
             PROJECT_PATH = "/go/src/github.com/cjburchell/loki"
+            VERSION = "v1.1.${env.BUILD_NUMBER}"
+            PRE_RELEASE_VERSION = "{env.VERSION}-${env.BRANCH_NAME}"
+            repository = "github.com/cjburchell/loki.git"
     }
 
     stages{
@@ -77,6 +80,30 @@ pipeline{
                             image.push("latest")
                         }
                     }
+                }
+            }
+        }
+        stage('Tag Pre Release') {
+            when { expression { params.PreRelease } }
+            steps {
+                 script {
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
+                        sh """git tag ${PRE_RELEASE_VERSION}"""
+                        sh """git push https://${env.GIT_USERNAME}:${env.GIT_PASSWORD}@${env.repository} ${PRE_RELEASE_VERSION}"""
+                    }
+
+                }
+            }
+        }
+        stage('Tag Release') {
+            when { expression { env.BRANCH_NAME == "master" } }
+            steps {
+                 script {
+                    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
+                        sh """git tag ${VERSION}"""
+                        sh """git push https://${env.GIT_USERNAME}:${env.GIT_PASSWORD}@${env.repository} ${VERSION}"""
+                    }
+
                 }
             }
         }
