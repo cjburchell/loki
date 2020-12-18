@@ -26,5 +26,7 @@ func Setup(r *mux.Router, clientLocation string, logger log.ILog) {
 	}
 
 	route.HandleFunc("/", handleClient)
+	route.HandleFunc("/endpoints", handleClient)
+	route.HandleFunc("/endpoint/{id}", handleClient)
 	route.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir(clientLocation))))
 }
