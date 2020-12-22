@@ -31,10 +31,52 @@ func Setup(r *mux.Router, logger log.ILog, server mockServer.IServer) {
 	route.HandleFunc("/endpoint/{id}", func(writer http.ResponseWriter, request *http.Request) {
 		handleDeleteEndpoint(writer, request, logger, server)
 	}).Methods("DELETE")
+
+	route.HandleFunc("/settings", func(writer http.ResponseWriter, _ *http.Request) {
+		handleGetSettings(writer, logger, server)
+	}).Methods("GET")
+
+	route.HandleFunc("/settings", func(writer http.ResponseWriter, request *http.Request) {
+		handleUpdateSettings(writer, request, logger, server)
+	}).Methods("PUT")
+}
+
+func handleUpdateSettings(w http.ResponseWriter, request *http.Request, logger log.ILog, server mockServer.IServer) {
+	item := models.Settings{}
+	err := json.NewDecoder(request.Body).Decode(item)
+	if err != nil {
+		logger.Errorf(err, "Unmarshal Failed %s", request.URL.String())
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = server.UpdateSettings(item)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		logger.Error(err)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func handleGetSettings(w http.ResponseWriter, logger log.ILog, server mockServer.IServer) {
+	settings := server.GetSettings()
+
+	reply, _ := json.Marshal(settings)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	_, err := w.Write(reply)
+	if err != nil {
+		logger.Error(err)
+	}
 }
 
 func handleGetEndpoints(w http.ResponseWriter, logger log.ILog, server mockServer.IServer) {
 	endpoints := server.GetEndpoints()
+	for _, endpoint := range endpoints {
+
+	}
 
 	reply, _ := json.Marshal(endpoints)
 	w.Header().Set("Content-Type", "application/json")

@@ -11,6 +11,8 @@ import {IEndpointService} from '../services/endpoint.service';
 export class EndpointsComponent implements OnInit {
 
   endpoints: IEndpoint[] | undefined;
+  searchText = '';
+
   constructor(private endpointService: IEndpointService) { }
 
   async ngOnInit(): Promise<any> {

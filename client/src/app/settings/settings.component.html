@@ -1,39 +1,8 @@
-<div class="endpoint">
-  <h1>Endpoint: {{endpoint?.name}}</h1>
-  <div *ngIf="endpoint">
-    <div class="form-row">
-      <div class="form-group">
-        <label>
-          Method:
-          <select class="form-control" [(ngModel)]="endpoint.method">
-            <option value="GET">GET</option>
-            <option value="POST">POST</option>
-            <option value="POST">PUT</option>
-            <option value="DELETE">DELETE</option>
-            <option value="HEAD">HEAD</option>
-            <option value="CONNECT">CONNECT</option>
-            <option value="OPTIONS">OPTIONS</option>
-            <option value="TRACE">TRACE</option>
-            <option value="PATCH">PATCH</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="form-group">
-        <label>
-          Path:
-          <input type="text" class="form-control" [(ngModel)]="endpoint.path">
-        </label>
-      </div>
-    </div>
-
-
-    <h4>Reply:</h4>
-    <div class="form-row">
-      <div class="form-group">
-        <label>
-        Response:
-        <select class="form-control" [(ngModel)]="endpoint.response">
+<div class="settings" *ngIf="settings">
+    <div class="form-group">
+      <label>
+        Default Reply:
+        <select class="form-control" id='response' [(ngModel)]="settings.default_reply">
           <option value="100">100 Continue</option>
           <option value="101">101 Switching Protocol</option>
           <option value="102">102 Processing (WebDAV)</option>
@@ -99,49 +68,16 @@
           <option value="511">511 Network Authentication Required</option>
         </select>
       </label>
-      </div>
-      <div class="form-group">
-        <label>
-        Delay:
-        <input type="number" class="form-control"  min="0" max="100" [(ngModel)]="endpoint.reply_delay">
+    </div>
+
+    <div class="form-group">
+      <label>
+        Partial Mock Server Address:
+        <input type="text" class="form-control" [(ngModel)]="settings.partial_mock_server_address">
       </label>
-      </div>
     </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>
-          Content Type:
-          <select class="form-control" [(ngModel)]="endpoint.content_type">
-            <option value="">None</option>
-            <option value="text/plain">Text (text/plain)</option>
-            <option value="application/json">JSON (application/json)</option>
-            <option value="application/javascript">Javascript (application/javascript))</option>
-            <option value="application/xml">XML (application/xml)</option>
-            <option value="text/xml">XML (text/xml)</option>
-            <option value="text/html">HTML (text/html)</option>
-          </select>
-        </label>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>
-          Body:
-          <textarea class="form-control" maxlength="1000" [(ngModel)]="endpoint.string_body"></textarea>
-        </label>
-      </div>
-    </div>
-
-
-    <div class="form-row">
+    <div class="form-group">
       <button type="button" class="btn btn-primary" (click)="Save()">Save</button>
-      <button type="button" class="btn btn-primary" (click)="Delete()">Delete</button>
     </div>
-  </div>
-
 </div>
-
-
 

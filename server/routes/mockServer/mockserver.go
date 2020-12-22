@@ -15,15 +15,24 @@ type IServer interface {
 	UpdateEndpoint(id string, endpoint models.Endpoint) error
 	GetEndpoint(id string) (*models.Endpoint, error)
 	GetEndpoints() []models.Endpoint
+	GetSettings() models.Settings
+	UpdateSettings(settings models.Settings)
 }
 
 type server struct {
-	name                     string
-	defaultReply             int
-	partialMockServerAddress string
-	client                   *http.Client
-	endpoints                []*endpoint
-	log                      log.ILog
+	name      string
+	settings  models.Settings
+	client    *http.Client
+	endpoints []*endpoint
+	log       log.ILog
+}
+
+func (s *server) GetSettings() models.Settings {
+	return s.settings
+}
+
+func (s *server) UpdateSettings(settings models.Settings)  {
+	s.settings = settings
 }
 
 func (s *server) DeleteEndpoint(id string) error {
@@ -96,11 +105,10 @@ func (s server) GetEndpoints() []models.Endpoint {
 // CreateServer creates the server
 func Setup(name string, defaultReply int, partialMockServerAddress string, log log.ILog, r *mux.Router) IServer {
 	server := &server{
-		name:                     name,
-		defaultReply:             defaultReply,
-		partialMockServerAddress: partialMockServerAddress,
-		client:                   &http.Client{},
-		log: log,
+		name:     name,
+		settings: models.Settings{DefaultReply: defaultReply, PartialMockServerAddress: partialMockServerAddress},
+		client:   &http.Client{},
+		log:      log,
 	}
 
 	r.PathPrefix("/").HandlerFunc(server.defaultHandler)
@@ -118,13 +126,13 @@ func (s *server) defaultHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if len(s.partialMockServerAddress) == 0 { // no partial mock
+	if len(s.settings.PartialMockServerAddress) == 0 { // no partial mock
 	    // just handle default stuff
-		w.WriteHeader(s.defaultReply)
+		w.WriteHeader(s.settings.DefaultReply)
 		return
 	}
 
-	req, err := http.NewRequest(r.Method, s.partialMockServerAddress+r.URL.Path, r.Body)
+	req, err := http.NewRequest(r.Method, s.settings.PartialMockServerAddress+r.URL.Path, r.Body)
 	if err != nil {
 		s.log.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)
