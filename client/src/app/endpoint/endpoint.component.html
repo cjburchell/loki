@@ -192,8 +192,8 @@
       </div>
     </div>
 
-    <button *ngIf="!create" type="submit" class="btn btn-success" [disabled]="endpointForm.form.invalid || string_body.untouched">Save</button>
-    <button *ngIf="create" type="submit" class="btn btn-success" [disabled]="endpointForm.form.invalid || string_body.untouched">Create</button>
+    <button *ngIf="!create" type="submit" class="btn btn-success" [disabled]="endpointForm.form.invalid">Save</button>
+    <button *ngIf="create" type="submit" class="btn btn-success" [disabled]="endpointForm.form.invalid">Create</button>
     <button *ngIf="!create" type="button" class="btn btn-secondary delete-button" style="margin-left: 10px" (click)="Delete().then()">Delete</button>
   </form>
 </div>
