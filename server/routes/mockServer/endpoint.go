@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"github.com/cjburchell/loki/models"
 	"github.com/cjburchell/uatu-go"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
-	"net/http/httputil"
 	"time"
 )
 
@@ -17,7 +15,6 @@ type endpoint struct {
 	models.Endpoint
 	responseBody []byte
 	log log.ILog
-	isVerbose bool
 }
 
 func createDefaultEndpoint(ep models.Endpoint, log log.ILog) *endpoint {
@@ -83,30 +80,13 @@ func (ep *endpoint) handleEndpoint(w http.ResponseWriter, r *http.Request) {
 		ContentType: r.Header.Get("Content-type"),
 	})
 
-	if ep.isVerbose {
-		requestDump, err := httputil.DumpRequest(r, true)
-		if err != nil {
-			ep.log.Error(err, "Unable to dump Request")
-		}
-
-		ep.log.Print(string(requestDump))
-
-		vars := mux.Vars(r)
-		if len(vars) != 0 {
-			ep.log.Print("Values:")
-			for key, value := range vars {
-				ep.log.Printf("Key: %s, Value: $s", key, value)
-			}
-		}
-	}
-
 	ep.handleReply(w)
 	fmt.Printf("Request:%s\n", string(requestData))
 }
 
 func (ep endpoint) handleReply(w http.ResponseWriter) {
 	if ep.ReplyDelay != 0 {
-		ep.log.Printf("Waiting for %sms", ep.ReplyDelay)
+		ep.log.Printf("Waiting for %dms", ep.ReplyDelay)
 		time.Sleep(time.Duration(ep.ReplyDelay) * time.Millisecond)
 	}
 
