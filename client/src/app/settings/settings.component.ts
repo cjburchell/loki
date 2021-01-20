@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import {IEndpointService} from '../services/endpoint.service';
 import {ISettings} from '../services/contracts/Settings';
+import {__await} from 'tslib';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-settings',
@@ -10,15 +12,28 @@ import {ISettings} from '../services/contracts/Settings';
 export class SettingsComponent implements OnInit {
   public settings: ISettings | undefined;
 
-  constructor(private endpointService: IEndpointService,) { }
+  public errorMsg = '';
 
-  async ngOnInit(): Promise<void> {
-    this.settings = await this.endpointService.GetSettings();
+  constructor(private endpointService: IEndpointService,
+              private router: Router) {
   }
 
-  async Save(): Promise<void> {
-    if(this.settings){
-      await this.endpointService.UpdateSettings(this.settings);
+  async ngOnInit(): Promise<void> {
+    try{
+      this.settings = await this.endpointService.GetSettings();
+    }catch (e) {
+      this.errorMsg = `Error loading settings: ${e.status} (${e.statusText})`;
+    }
+  }
+
+  public async Save(): Promise<void> {
+    if (this.settings) {
+      try {
+        await this.endpointService.UpdateSettings(this.settings);
+        this.router.navigate([`/endpoints`]).then(() => {});
+      } catch (e) {
+        this.errorMsg = `Unable to save settings: ${e.status} (${e.statusText})`;
+      }
     }
   }
 }

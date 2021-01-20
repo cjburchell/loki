@@ -17,6 +17,8 @@ type IServer interface {
 	GetEndpoints() []models.Endpoint
 	GetSettings() models.Settings
 	UpdateSettings(settings models.Settings)
+
+	SetRoute(r *mux.Router)
 }
 
 type server struct {
@@ -95,23 +97,25 @@ func (s server) GetEndpoint(id string) (*models.Endpoint, error) {
 }
 
 func (s server) GetEndpoints() []models.Endpoint {
-	endpoints := make([]models.Endpoint, 0)
+	endpoints := make([]models.Endpoint, len(s.endpoints))
 	for index, ep := range s.endpoints {
 		endpoints[index] = ep.Endpoint
 	}
 	return endpoints
 }
 
+func (s* server) SetRoute(r *mux.Router)  {
+	r.PathPrefix("/").HandlerFunc(s.defaultHandler)
+}
+
 // CreateServer creates the server
-func Setup(name string, defaultReply int, partialMockServerAddress string, log log.ILog, r *mux.Router) IServer {
+func Setup(name string, defaultReply int, partialMockServerAddress string, log log.ILog) IServer {
 	server := &server{
 		name:     name,
 		settings: models.Settings{DefaultReply: defaultReply, PartialMockServerAddress: partialMockServerAddress},
 		client:   &http.Client{},
 		log:      log,
 	}
-
-	r.PathPrefix("/").HandlerFunc(server.defaultHandler)
 
 	return server
 }

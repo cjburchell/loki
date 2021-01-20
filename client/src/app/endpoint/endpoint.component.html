@@ -1,11 +1,27 @@
-<div class="endpoint">
-  <h1>Endpoint: {{endpoint?.name}}</h1>
+<div class="container-fluid endpoint">
+  <div class="alert alert-danger" *ngIf="errorMsg">
+    {{errorMsg}}
+  </div>
   <div *ngIf="endpoint">
+    <h1 *ngIf="!create">Endpoint: {{endpoint.name}}</h1>
+    <h1 *ngIf="create">Create Endpoint</h1>
+  </div>
+  <form *ngIf="endpoint" #endpointForm="ngForm" novalidate (ngSubmit)="(create?Create():Save()).then()">
+    <div class="form-row" *ngIf="create">
+      <div class="form-group">
+        <label>
+          Name:
+          <input name="name" #name="ngModel" required type="text" [class.is-invalid]="name.invalid && name.touched" class="form-control" [(ngModel)]="endpoint.name">
+          <small [class.d-none]="name.valid || name.untouched" class="text-danger">Name is required</small>
+        </label>
+      </div>
+    </div>
+
     <div class="form-row">
       <div class="form-group">
         <label>
           Method:
-          <select class="form-control" [(ngModel)]="endpoint.method">
+          <select class="form-control" name="method" [(ngModel)]="endpoint.method">
             <option value="GET">GET</option>
             <option value="POST">POST</option>
             <option value="POST">PUT</option>
@@ -22,18 +38,18 @@
       <div class="form-group">
         <label>
           Path:
-          <input type="text" class="form-control" [(ngModel)]="endpoint.path">
+          <input type="text" class="form-control" #path="ngModel" name="path" required [class.is-invalid]="path.invalid && path.touched" [(ngModel)]="endpoint.path">
+          <small [class.d-none]="path.valid || path.untouched" class="text-danger">Path is required</small>
         </label>
       </div>
     </div>
-
 
     <h4>Reply:</h4>
     <div class="form-row">
       <div class="form-group">
         <label>
         Response:
-        <select class="form-control" [(ngModel)]="endpoint.response">
+        <select name="response" required class="form-control" [(ngModel)]="endpoint.response">
           <option value="100">100 Continue</option>
           <option value="101">101 Switching Protocol</option>
           <option value="102">102 Processing (WebDAV)</option>
@@ -102,8 +118,8 @@
       </div>
       <div class="form-group">
         <label>
-        Delay:
-        <input type="number" class="form-control"  min="0" max="100" [(ngModel)]="endpoint.reply_delay">
+        Delay (Seconds):
+        <input name="reply_delay" type="number" class="form-control" min="0" max="100" [(ngModel)]="endpoint.reply_delay">
       </label>
       </div>
     </div>
@@ -112,7 +128,7 @@
       <div class="form-group">
         <label>
           Content Type:
-          <select class="form-control" [(ngModel)]="endpoint.content_type">
+          <select name="content_type" class="form-control" [(ngModel)]="endpoint.content_type">
             <option value="">None</option>
             <option value="text/plain">Text (text/plain)</option>
             <option value="application/json">JSON (application/json)</option>
@@ -128,20 +144,60 @@
     <div class="form-row">
       <div class="form-group">
         <label>
+          Headers:
+        </label>
+        <div class="card">
+          <div class="card-body">
+            <table class="table">
+              <thead>
+              <tr>
+                <th scope="col">Key</th>
+                <th scope="col">Value</th>
+                <th scope="col" class="delete-header"></th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let header of endpoint.headers; let i = index">
+                <td>
+                  <label>
+                    <input [name]="'key'+i" type="text" required class="form-control" [class.is-invalid]="endpointForm.controls['key'+i]?.invalid && endpointForm.controls['key'+i]?.touched" [(ngModel)]="header.key">
+                  </label>
+                  <small [class.d-none]="endpointForm.controls['key'+i]?.valid || endpointForm.controls['key'+i]?.untouched" class="text-danger">Missing key</small>
+                </td>
+                <td>
+                  <label>
+                    <input [name]="'value'+i" type="text" class="form-control" required [class.is-invalid]="endpointForm.controls['value'+i]?.invalid && endpointForm.controls['value'+i]?.touched" [(ngModel)]="header.value">
+                  </label>
+                  <small [class.d-none]="endpointForm.controls['value'+i]?.valid || endpointForm.controls['value'+i]?.untouched" class="text-danger">You must a value</small>
+                </td>
+                <td>
+                  <button type="button" class="btn btn-secondary" (click)="DeleteHeaderItem(header)">Delete</button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+            <button type="button" class="btn btn-secondary" (click)="AddHeaderItem()">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>
           Body:
-          <textarea class="form-control" maxlength="1000" [(ngModel)]="endpoint.string_body"></textarea>
+          <textarea #string_body="ngModel" name="string_body" class="form-control" maxlength="10000" [class.is-invalid]="string_body.invalid && string_body.touched" [(ngModel)]="endpoint.string_body"></textarea>
+          <small [class.d-none]="string_body.valid || string_body.untouched" class="text-danger">Body is too long</small>
         </label>
       </div>
     </div>
 
-
-    <div class="form-row">
-      <button type="button" class="btn btn-primary" (click)="Save()">Save</button>
-      <button type="button" class="btn btn-primary" (click)="Delete()">Delete</button>
-    </div>
-  </div>
-
+    <button *ngIf="!create" type="submit" class="btn btn-success" [disabled]="endpointForm.form.invalid || string_body.untouched">Save</button>
+    <button *ngIf="create" type="submit" class="btn btn-success" [disabled]="endpointForm.form.invalid || string_body.untouched">Create</button>
+    <button *ngIf="!create" type="button" class="btn btn-secondary delete-button" style="margin-left: 10px" (click)="Delete().then()">Delete</button>
+  </form>
 </div>
+
 
 
 

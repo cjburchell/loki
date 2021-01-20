@@ -8,6 +8,7 @@ const routes: Routes = [
   {path: 'settings', component: SettingsComponent },
   {path: 'endpoints', component: EndpointsComponent },
   {path: 'endpoint/:endpointId', component: EndpointComponent },
+  {path: 'endpoint', component: EndpointComponent },
   {path: '', pathMatch: 'full', redirectTo: 'endpoints'}
 ];
 

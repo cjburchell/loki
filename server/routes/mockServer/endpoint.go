@@ -118,6 +118,12 @@ func (ep endpoint) handleReply(w http.ResponseWriter) {
 		}
 	}
 
+	if ep.Headers != nil {
+		for _,header := range ep.Headers {
+			w.Header().Set(header.Key, header.Value)
+		}
+	}
+
 	if len(ep.ContentType) != 0 {
 		w.Header().Set("Content-Type", ep.ContentType)
 	}

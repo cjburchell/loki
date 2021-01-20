@@ -12,9 +12,10 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NavComponent } from './nav/nav.component';
 import { SearchComponent } from './common/search/search.component';
 import { FilterPipe } from './pipes/filter.pipe';
-import {FormsModule} from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { SettingsComponent } from './settings/settings.component';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -31,10 +32,12 @@ import { SettingsComponent } from './settings/settings.component';
     AppRoutingModule,
     NgbModule,
     FormsModule,
-    FontAwesomeModule
+    FontAwesomeModule,
+    ReactiveFormsModule,
+    HttpClientModule,
   ],
   providers: [
-    { provide: IEndpointService, useClass: !environment.mockData ? EndpointService : MockDataService }
+    { provide: IEndpointService, useClass: !environment.mockData ? EndpointService : EndpointService },
   ],
   bootstrap: [AppComponent]
 })

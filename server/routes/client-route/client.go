@@ -21,12 +21,19 @@ func Setup(r *mux.Router, clientLocation string, logger log.ILog) {
 		logger.Error(err)
 	}
 
+	err = mime.AddExtensionType(".css", "text/css")
+	if err != nil {
+		logger.Error(err)
+	}
+
 	handleClient := func (w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, clientLocation+"/index.html")
 	}
 
-	route.HandleFunc("/", handleClient)
+	route.HandleFunc("", handleClient)
 	route.HandleFunc("/endpoints", handleClient)
 	route.HandleFunc("/endpoint/{id}", handleClient)
-	route.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir(clientLocation))))
+	route.HandleFunc("/endpoint", handleClient)
+	route.HandleFunc("/settings", handleClient)
+	route.PathPrefix("/").Handler(http.StripPrefix("/@client/", http.FileServer(http.Dir(clientLocation))))
 }

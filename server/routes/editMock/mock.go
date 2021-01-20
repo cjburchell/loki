@@ -43,19 +43,14 @@ func Setup(r *mux.Router, logger log.ILog, server mockServer.IServer) {
 
 func handleUpdateSettings(w http.ResponseWriter, request *http.Request, logger log.ILog, server mockServer.IServer) {
 	item := models.Settings{}
-	err := json.NewDecoder(request.Body).Decode(item)
+	err := json.NewDecoder(request.Body).Decode(&item)
 	if err != nil {
 		logger.Errorf(err, "Unmarshal Failed %s", request.URL.String())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = server.UpdateSettings(item)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		logger.Error(err)
-	}
-
+	server.UpdateSettings(item)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -74,9 +69,6 @@ func handleGetSettings(w http.ResponseWriter, logger log.ILog, server mockServer
 
 func handleGetEndpoints(w http.ResponseWriter, logger log.ILog, server mockServer.IServer) {
 	endpoints := server.GetEndpoints()
-	for _, endpoint := range endpoints {
-
-	}
 
 	reply, _ := json.Marshal(endpoints)
 	w.Header().Set("Content-Type", "application/json")
@@ -121,7 +113,7 @@ func handleDeleteEndpoint(w http.ResponseWriter, request *http.Request, logger l
 
 func handleCreateEndpoint(w http.ResponseWriter, request *http.Request, logger log.ILog, server mockServer.IServer) {
 	item := models.Endpoint{}
-	err := json.NewDecoder(request.Body).Decode(item)
+	err := json.NewDecoder(request.Body).Decode(&item)
 	if err != nil {
 		logger.Errorf(err, "Unmarshal Failed %s", request.URL.String())
 		w.WriteHeader(http.StatusBadRequest)
@@ -143,7 +135,7 @@ func handleUpdateEndpoint(w http.ResponseWriter, request *http.Request, logger l
 	endpointId := vars["id"]
 
 	item := models.Endpoint{}
-	err := json.NewDecoder(request.Body).Decode(item)
+	err := json.NewDecoder(request.Body).Decode(&item)
 	if err != nil {
 		logger.Errorf(err, "Unmarshal Failed %s", request.URL.String())
 		w.WriteHeader(http.StatusBadRequest)

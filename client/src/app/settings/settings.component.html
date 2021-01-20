@@ -1,8 +1,11 @@
-<div class="settings" *ngIf="settings">
+<div class="alert alert-danger" *ngIf="errorMsg">
+  {{errorMsg}}
+</div>
+<form class="settings" *ngIf="settings" #settingsForm="ngForm" novalidate (ngSubmit)=" Save().then()">
     <div class="form-group">
       <label>
         Default Reply:
-        <select class="form-control" id='response' [(ngModel)]="settings.default_reply">
+        <select name="default_reply" class="form-control" id='response' [(ngModel)]="settings.default_reply">
           <option value="100">100 Continue</option>
           <option value="101">101 Switching Protocol</option>
           <option value="102">102 Processing (WebDAV)</option>
@@ -73,11 +76,10 @@
     <div class="form-group">
       <label>
         Partial Mock Server Address:
-        <input type="text" class="form-control" [(ngModel)]="settings.partial_mock_server_address">
+        <input #partial_mock_server_address="ngModel" name="partial_mock_server_address" type="text" class="form-control" maxlength="10000" [class.is-invalid]="partial_mock_server_address.invalid && partial_mock_server_address.touched" [(ngModel)]="settings.partial_mock_server_address">
+        <small [class.d-none]="partial_mock_server_address.valid || partial_mock_server_address.untouched" class="text-danger">Body is too long</small>
       </label>
     </div>
-    <div class="form-group">
-      <button type="button" class="btn btn-primary" (click)="Save()">Save</button>
-    </div>
-</div>
+    <button type="submit" class="btn btn-primary" [disabled]="settingsForm.form.invalid">Save</button>
+</form>
 
