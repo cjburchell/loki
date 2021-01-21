@@ -29,6 +29,8 @@ golint:
     - if [ "$out" ]; then echo "$out"; exit 1; fi
 
 docker-build-master:
+  inherit:
+    default: false
   image: docker:latest
   stage: build
   services:
@@ -43,6 +45,8 @@ docker-build-master:
 
 docker-build:
   image: docker:latest
+  inherit:
+    default: false
   stage: build
   services:
     - docker:dind
