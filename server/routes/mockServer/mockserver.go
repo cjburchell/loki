@@ -33,13 +33,13 @@ func (s *server) GetSettings() models.Settings {
 	return s.settings
 }
 
-func (s *server) UpdateSettings(settings models.Settings)  {
+func (s *server) UpdateSettings(settings models.Settings) {
 	s.settings = settings
 }
 
 func (s *server) DeleteEndpoint(id string) error {
 	for i, ep := range s.endpoints {
-		if ep.Name == id{
+		if ep.Name == id {
 			// delete endpoint from list
 			s.endpoints = append(s.endpoints[:i], s.endpoints[i+1:]...)
 			return nil
@@ -51,7 +51,7 @@ func (s *server) DeleteEndpoint(id string) error {
 
 func (s *server) UpdateEndpoint(id string, endpoint models.Endpoint) error {
 
-	if len(endpoint.Path) == 0  {
+	if len(endpoint.Path) == 0 {
 		return fmt.Errorf("missing Path")
 	}
 
@@ -59,16 +59,16 @@ func (s *server) UpdateEndpoint(id string, endpoint models.Endpoint) error {
 		return fmt.Errorf("missing Method")
 	}
 
-	if len(endpoint.Name) == 0  {
+	if len(endpoint.Name) == 0 {
 		return fmt.Errorf("missing endpint name")
 	}
 
-	if endpoint.Name != id  {
-		return fmt.Errorf("name mismach %s != %s", id , endpoint.Name)
+	if endpoint.Name != id {
+		return fmt.Errorf("name mismach %s != %s", id, endpoint.Name)
 	}
 
 	ep, err := s.getEndpoint(id)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
@@ -79,7 +79,7 @@ func (s *server) UpdateEndpoint(id string, endpoint models.Endpoint) error {
 
 func (s server) getEndpoint(id string) (*endpoint, error) {
 	for _, ep := range s.endpoints {
-		if ep.Name == id{
+		if ep.Name == id {
 			return ep, nil
 		}
 	}
@@ -89,7 +89,7 @@ func (s server) getEndpoint(id string) (*endpoint, error) {
 
 func (s server) GetEndpoint(id string) (*models.Endpoint, error) {
 	ep, err := s.getEndpoint(id)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -104,7 +104,7 @@ func (s server) GetEndpoints() []models.Endpoint {
 	return endpoints
 }
 
-func (s* server) SetRoute(r *mux.Router)  {
+func (s *server) SetRoute(r *mux.Router) {
 	r.PathPrefix("/").HandlerFunc(s.defaultHandler)
 }
 
@@ -131,7 +131,7 @@ func (s *server) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(s.settings.PartialMockServerAddress) == 0 { // no partial mock
-	    // just handle default stuff
+		// just handle default stuff
 		w.WriteHeader(s.settings.DefaultReply)
 		return
 	}
@@ -153,13 +153,13 @@ func (s *server) defaultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer func() {
-		if err := resp.Body.Close(); err != nil{
+		if err := resp.Body.Close(); err != nil {
 			s.log.Error(err)
 		}
 	}()
 
 	for key, values := range resp.Header {
-		for _, value := range values{
+		for _, value := range values {
 			w.Header().Set(key, value)
 		}
 	}
@@ -181,7 +181,7 @@ func (s *server) defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) AddEndpoint(ep models.Endpoint) error {
 
-	if len(ep.Path) == 0  {
+	if len(ep.Path) == 0 {
 		return fmt.Errorf("missing Path")
 	}
 
@@ -189,7 +189,7 @@ func (s *server) AddEndpoint(ep models.Endpoint) error {
 		return fmt.Errorf("missing Method")
 	}
 
-	if len(ep.Name) == 0  {
+	if len(ep.Name) == 0 {
 		return fmt.Errorf("missing endpint name")
 	}
 

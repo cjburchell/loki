@@ -14,16 +14,16 @@ import (
 type endpoint struct {
 	models.Endpoint
 	responseBody []byte
-	log log.ILog
+	log          log.ILog
 }
 
 func createDefaultEndpoint(ep models.Endpoint, log log.ILog) *endpoint {
-	endpoint := &endpoint{Endpoint:ep, log: log}
+	endpoint := &endpoint{Endpoint: ep, log: log}
 	endpoint.updateResponseBody()
 	return endpoint
 }
 
-func (ep *endpoint) updateResponseBody()  {
+func (ep *endpoint) updateResponseBody() {
 	if ep.ResponseBody != nil {
 		if ep.ContentType == "application/json" {
 			ep.setJSONBody(ep.ResponseBody)
@@ -55,7 +55,7 @@ func (ep *endpoint) setRawBody(body []byte) {
 	ep.log.Printf("Setting Reply Body of %s", ep.responseBody)
 }
 
-func (ep *endpoint) setStringBody(body string)  {
+func (ep *endpoint) setStringBody(body string) {
 	ep.setRawBody([]byte(body))
 }
 
@@ -99,7 +99,7 @@ func (ep endpoint) handleReply(w http.ResponseWriter) {
 	}
 
 	if ep.Headers != nil {
-		for _,header := range ep.Headers {
+		for _, header := range ep.Headers {
 			w.Header().Set(header.Key, header.Value)
 		}
 	}

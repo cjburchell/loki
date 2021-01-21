@@ -9,7 +9,7 @@ import (
 )
 
 func Setup(r *mux.Router, clientLocation string, logger log.ILog) {
-	route :=  r.PathPrefix("/@client").Subrouter()
+	route := r.PathPrefix("/@client").Subrouter()
 
 	err := mime.AddExtensionType(".js", "application/javascript; charset=utf-8")
 	if err != nil {
@@ -26,7 +26,7 @@ func Setup(r *mux.Router, clientLocation string, logger log.ILog) {
 		logger.Error(err)
 	}
 
-	handleClient := func (w http.ResponseWriter, r *http.Request) {
+	handleClient := func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, clientLocation+"/index.html")
 	}
 

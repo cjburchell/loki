@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-
 // GetEndpoints configuration
 func GetEndpoints(log log.ILog) ([]models.Endpoint, error) {
 	results, err := load(log)

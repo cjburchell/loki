@@ -51,9 +51,8 @@ func startServer(port int, endpoints []models.Endpoint, log log.ILog, settings s
 
 	status.Setup(r, log)
 
-
-	serviceName:= settings.Get("ServerName", "Loki")
-	clientroute.Setup(r, settings.Get("ClientLocation", "client/dist/client") ,log)
+	serviceName := settings.Get("ServerName", "Loki")
+	clientroute.Setup(r, settings.Get("ClientLocation", "client/dist/client"), log)
 
 	ms := mockServer.Setup(serviceName,
 		settings.GetInt("DefaultReply", http.StatusBadRequest),
@@ -61,7 +60,7 @@ func startServer(port int, endpoints []models.Endpoint, log log.ILog, settings s
 
 	for _, endpointConfig := range endpoints {
 		err := ms.AddEndpoint(endpointConfig)
-		if err !=nil{
+		if err != nil {
 			log.Errorf(err, "Unable to add endpoint %s", endpointConfig.Name)
 		}
 	}
@@ -92,7 +91,6 @@ func startServer(port int, endpoints []models.Endpoint, log log.ILog, settings s
 			fmt.Println(err.Error())
 		}
 	}()
-
 
 	defer func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)

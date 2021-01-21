@@ -10,7 +10,7 @@ import (
 )
 
 func Setup(r *mux.Router, logger log.ILog, server mockServer.IServer) {
-	route :=  r.PathPrefix("/@mock").Subrouter()
+	route := r.PathPrefix("/@mock").Subrouter()
 
 	route.HandleFunc("/endpoint", func(writer http.ResponseWriter, _ *http.Request) {
 		handleGetEndpoints(writer, logger, server)
@@ -84,7 +84,7 @@ func handleGetEndpoint(w http.ResponseWriter, request *http.Request, logger log.
 	vars := mux.Vars(request)
 	endpointId := vars["id"]
 	endpoint, err := server.GetEndpoint(endpointId)
-	if err != nil{
+	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		logger.Error(err)
 	}
@@ -103,7 +103,7 @@ func handleDeleteEndpoint(w http.ResponseWriter, request *http.Request, logger l
 	vars := mux.Vars(request)
 	endpointId := vars["id"]
 	err := server.DeleteEndpoint(endpointId)
-	if err != nil{
+	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		logger.Error(err)
 	}
@@ -150,5 +150,3 @@ func handleUpdateEndpoint(w http.ResponseWriter, request *http.Request, logger l
 
 	w.WriteHeader(http.StatusNoContent)
 }
-
-
