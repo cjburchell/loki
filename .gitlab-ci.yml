@@ -31,7 +31,8 @@ golint:
     - echo $GO_PROJECT_PATH
     - cd $GO_PROJECT_PATH
   script:
-    - go get -u github.com/golang/lint/golint
+    - go get -u golang.org/x/lint/golint/...
+    - go get -u github.com/tebeka/go2xunit
     - out=$(golint $(go list ./... | grep -v "vendor"))
     - if [ "$out" ]; then echo "$out"; exit 1; fi
 
