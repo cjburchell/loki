@@ -1,0 +1,30 @@
+<div class="endpoints">
+  <div class="alert alert-danger" *ngIf="errorMsg">
+    {{errorMsg}}
+  </div>
+  <div *ngIf="endpoints">
+    <app-search [(searchText)]="searchText"></app-search>
+    <table class="table table-striped">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Method</th>
+        <th>Path</th>
+        <th>Result</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let endpoint of endpoints | filter : searchText: 'name'">
+        <td><a [routerLink]="" (click)="Show(endpoint)">{{endpoint?.name}}</a></td>
+        <td><b>{{endpoint?.method}}</b> </td>
+        <td>{{endpoint?.path}}</td>
+        <td>{{endpoint?.response}}</td>
+      </tr>
+      </tbody>
+    </table>
+    <button type="button" class="btn btn-primary" (click)="Create()">Create</button>
+  </div>
+</div>
+
+
+

@@ -1,5 +1,9 @@
 image: golang:1.14
 
+variables:
+  VERSION: 1.2.0
+  IMAGE_TAG: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:$CI_COMMIT_SHA
+
 before_script:
   - export GO_PROJECT_PATH="$GOPATH/src/github.com/$CI_PROJECT_NAMESPACE"
   - echo $GO_PROJECT_PATH
@@ -10,23 +14,36 @@ before_script:
   - cd $GO_PROJECT_PATH
 
 stages:
-  - test
   - style
   - build
+  - test
 
-go_vet:
-  stage: test
+go-vet:
+  stage: style
   script:
+    - cd server
     - go fmt $(go list ./... | grep -v /vendor/)
     - go vet $(go list ./... | grep -v /vendor/)
 
-golint:
+go-lint:
   stage: style
-  script:
+  before_script:
     - go get -u golang.org/x/lint/golint/...
-    - go get -u github.com/tebeka/go2xunit
+  script:
     - out=$(golint $(go list ./... | grep -v "vendor"))
     - if [ "$out" ]; then echo "$out"; exit 1; fi
+
+docker-lint:
+  stage: style
+  inherit:
+    default: false
+  image: hadolint/hadolint:latest-debian
+  script:
+    - hadolint Dockerfile | tee -a  ms1_docker_lint.txt
+  artifacts:
+    paths:
+      - ms1_docker_lint.txt
+    expire_in: 1 week
 
 docker-build-master:
   inherit:
@@ -39,7 +56,11 @@ docker-build-master:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
     - docker build --pull -t "$CI_REGISTRY_IMAGE" .
-    - docker push "$CI_REGISTRY_IMAGE"
+    - docker push $CI_REGISTRY_IMAGE
+    - docker tag $CI_REGISTRY_IMAGE/$VERSION
+    - docker push $CI_REGISTRY_IMAGE/$VERSION
+    - docker tag $IMAGE_TAG
+    - docker push $$IMAGE_TAG
   only:
     - master
 
@@ -53,7 +74,12 @@ docker-build:
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" .
-    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+    - docker build --pull -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
   except:
     - master
+
+include:
+  - template: Container-Scanning.gitlab-ci.yml
+  - template: Security/License-Scanning.gitlab-ci.yml
+  - template: Dependency-Scanning.gitlab-ci.yml

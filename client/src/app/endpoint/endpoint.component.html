@@ -1,0 +1,203 @@
+<div class="container-fluid endpoint">
+  <div class="alert alert-danger" *ngIf="errorMsg">
+    {{errorMsg}}
+  </div>
+  <div *ngIf="endpoint">
+    <h1 *ngIf="!create">Endpoint: {{endpoint.name}}</h1>
+    <h1 *ngIf="create">Create Endpoint</h1>
+  </div>
+  <form *ngIf="endpoint" #endpointForm="ngForm" novalidate (ngSubmit)="(create?Create():Save()).then()">
+    <div class="form-row" *ngIf="create">
+      <div class="form-group">
+        <label>
+          Name:
+          <input name="name" #name="ngModel" required type="text" [class.is-invalid]="name.invalid && name.touched" class="form-control" [(ngModel)]="endpoint.name">
+          <small [class.d-none]="name.valid || name.untouched" class="text-danger">Name is required</small>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>
+          Method:
+          <select class="form-control" name="method" [(ngModel)]="endpoint.method">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="POST">PUT</option>
+            <option value="DELETE">DELETE</option>
+            <option value="HEAD">HEAD</option>
+            <option value="CONNECT">CONNECT</option>
+            <option value="OPTIONS">OPTIONS</option>
+            <option value="TRACE">TRACE</option>
+            <option value="PATCH">PATCH</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label>
+          Path:
+          <input type="text" class="form-control" #path="ngModel" name="path" required [class.is-invalid]="path.invalid && path.touched" [(ngModel)]="endpoint.path">
+          <small [class.d-none]="path.valid || path.untouched" class="text-danger">Path is required</small>
+        </label>
+      </div>
+    </div>
+
+    <h4>Reply:</h4>
+    <div class="form-row">
+      <div class="form-group">
+        <label>
+        Response:
+        <select name="response" required class="form-control" [(ngModel)]="endpoint.response">
+          <option [ngValue]="100">100 Continue</option>
+          <option [ngValue]="101">101 Switching Protocol</option>
+          <option [ngValue]="102">102 Processing (WebDAV)</option>
+          <option [ngValue]="103">103 Early Hints</option>
+          <option [ngValue]="200">200 OK</option>
+          <option [ngValue]="201">201 Created</option>
+          <option [ngValue]="202">202 Accepted</option>
+          <option [ngValue]="203">203 Non-Authoritative Information</option>
+          <option [ngValue]="204">204 No Content</option>
+          <option [ngValue]="205">205 Reset Content</option>
+          <option [ngValue]="206">206 Partial Content</option>
+          <option [ngValue]="207">207 Multi-Status (WebDAV)</option>
+          <option [ngValue]="208">208 Already Reported (WebDAV)</option>
+          <option [ngValue]="226">226 IM Used (HTTP Delta encoding)</option>
+          <option [ngValue]="300">300 Multiple Choice</option>
+          <option [ngValue]="301">301 Moved Permanently</option>
+          <option [ngValue]="302">302 Found</option>
+          <option [ngValue]="303">303 See Other</option>
+          <option [ngValue]="304">304 Not Modified</option>
+          <option [ngValue]="305">305 Use Proxy</option>
+          <option [ngValue]="306">306 unused</option>
+          <option [ngValue]="307">307 Temporary Redirect</option>
+          <option [ngValue]="308">308 Permanent Redirect</option>
+          <option [ngValue]="400">400 Bad Request</option>
+          <option [ngValue]="401">401 Unauthorized</option>
+          <option [ngValue]="402">402 Payment Required</option>
+          <option [ngValue]="403">403 Forbidden</option>
+          <option [ngValue]="404">404 Not Found</option>
+          <option [ngValue]="405">405 Method Not Allowed</option>
+          <option [ngValue]="406">406 Not Acceptable</option>
+          <option [ngValue]="407">407 Proxy Authentication Required</option>
+          <option [ngValue]="408">408 Request Timeout</option>
+          <option [ngValue]="409">409 Conflict</option>
+          <option [ngValue]="410">410 Gone</option>
+          <option [ngValue]="411">411 Length Required</option>
+          <option [ngValue]="412">412 Precondition Failed</option>
+          <option [ngValue]="413">413 Payload Too Large</option>
+          <option [ngValue]="414">414 URI Too Long</option>
+          <option [ngValue]="415">415 Unsupported Media Type</option>
+          <option [ngValue]="416">416 Range Not Satisfiable</option>
+          <option [ngValue]="417">417 Expectation Failed</option>
+          <option [ngValue]="418">418 I'm a teapot</option>
+          <option [ngValue]="421">421 Misdirected Request</option>
+          <option [ngValue]="422">422 Unprocessable Entity (WebDAV)</option>
+          <option [ngValue]="423">423 Locked (WebDAV)</option>
+          <option [ngValue]="424">424 Failed Dependency (WebDAV)</option>
+          <option [ngValue]="425">425 Too Early</option>
+          <option [ngValue]="426">426 Upgrade Required</option>
+          <option [ngValue]="428">428 Precondition Required</option>
+          <option [ngValue]="429">429 Too Many Requests</option>
+          <option [ngValue]="431">431 Request Header Fields Too Large</option>
+          <option [ngValue]="451">451 Unavailable For Legal Reasons</option>
+          <option [ngValue]="500">500 Internal Server Error</option>
+          <option [ngValue]="501">501 Not Implemented</option>
+          <option [ngValue]="502">502 Bad Gateway</option>
+          <option [ngValue]="503">503 Service Unavailable</option>
+          <option [ngValue]="504">504 Gateway Timeout</option>
+          <option [ngValue]="505">505 HTTP Version Not Supported</option>
+          <option [ngValue]="506">506 Variant Also Negotiates</option>
+          <option [ngValue]="507">507 Insufficient Storage (WebDAV)</option>
+          <option [ngValue]="508">508 Loop Detected (WebDAV)</option>
+          <option [ngValue]="510">510 Not Extended</option>
+          <option [ngValue]="511">511 Network Authentication Required</option>
+        </select>
+      </label>
+      </div>
+      <div class="form-group">
+        <label>
+        Delay (ms):
+        <input name="reply_delay" type="number" class="form-control" min="0" max="100" [(ngModel)]="endpoint.reply_delay">
+      </label>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>
+          Headers:
+        </label>
+        <div class="card">
+          <div class="card-body">
+            <table class="table">
+              <thead>
+              <tr>
+                <th scope="col">Key</th>
+                <th scope="col">Value</th>
+                <th scope="col" class="delete-header"></th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let header of endpoint.headers; let i = index">
+                <td>
+                  <label>
+                    <input [name]="'key'+i" type="text" required class="form-control" [class.is-invalid]="endpointForm.controls['key'+i]?.invalid && endpointForm.controls['key'+i]?.touched" [(ngModel)]="header.key">
+                  </label>
+                  <small [class.d-none]="endpointForm.controls['key'+i]?.valid || endpointForm.controls['key'+i]?.untouched" class="text-danger">Missing key</small>
+                </td>
+                <td>
+                  <label>
+                    <input [name]="'value'+i" type="text" class="form-control" required [class.is-invalid]="endpointForm.controls['value'+i]?.invalid && endpointForm.controls['value'+i]?.touched" [(ngModel)]="header.value">
+                  </label>
+                  <small [class.d-none]="endpointForm.controls['value'+i]?.valid || endpointForm.controls['value'+i]?.untouched" class="text-danger">You must a value</small>
+                </td>
+                <td>
+                  <button type="button" class="btn btn-secondary" (click)="DeleteHeaderItem(header)">Delete</button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+            <button type="button" class="btn btn-secondary" (click)="AddHeaderItem()">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>
+          Content Type:
+          <select name="content_type" class="form-control" [(ngModel)]="endpoint.content_type">
+            <option value="">None</option>
+            <option value="text/plain">Text (text/plain)</option>
+            <option value="application/json">JSON (application/json)</option>
+            <option value="application/javascript">Javascript (application/javascript))</option>
+            <option value="application/xml">XML (application/xml)</option>
+            <option value="text/xml">XML (text/xml)</option>
+            <option value="text/html">HTML (text/html)</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-row" *ngIf="endpoint.content_type">
+      <div class="form-group">
+        <label>
+          Body:
+          <textarea #string_body="ngModel" name="string_body" class="form-control" maxlength="10000" [class.is-invalid]="string_body.invalid && string_body.touched" [(ngModel)]="endpoint.string_body"></textarea>
+          <small [class.d-none]="string_body.valid || string_body.untouched" class="text-danger">Body is too long</small>
+        </label>
+      </div>
+    </div>
+
+    <button *ngIf="!create" type="submit" class="btn btn-success" [disabled]="endpointForm.form.invalid">Save</button>
+    <button *ngIf="create" type="submit" class="btn btn-success" [disabled]="endpointForm.form.invalid">Create</button>
+    <button *ngIf="!create" type="button" class="btn btn-secondary delete-button" style="margin-left: 10px" (click)="Delete().then()">Delete</button>
+  </form>
+</div>
+
+
+
+
