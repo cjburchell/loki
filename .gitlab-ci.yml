@@ -39,7 +39,7 @@ docker-lint:
     default: false
   image: hadolint/hadolint:latest-debian
   script:
-    - hadolint dockerfile | tee -a  ms1_docker_lint.txt
+    - hadolint Dockerfile | tee -a  ms1_docker_lint.txt
   artifacts:
     paths:
       - ms1_docker_lint.txt
