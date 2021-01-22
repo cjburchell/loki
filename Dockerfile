@@ -11,7 +11,7 @@ WORKDIR /server
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main
 
 FROM alpine:3.12.2 as certs
-RUN apk --update add ca-certificates
+RUN apk --no-cache add ca-certificates=20191127-r4
 
 FROM scratch
 
