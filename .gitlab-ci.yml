@@ -14,12 +14,12 @@ before_script:
   - cd $GO_PROJECT_PATH
 
 stages:
-  - test
   - style
   - build
+  - test
 
 go-vet:
-  stage: test
+  stage: style
   script:
     - cd server
     - go fmt $(go list ./... | grep -v /vendor/)
@@ -37,9 +37,9 @@ docker-lint:
   stage: style
   inherit:
     default: false
-  image: docker.io/hadolint/hadolint
+  image: hadolint/hadolint:latest-debian
   script:
-    - /bin/hadolin dockerfile | tee -a  ms1_docker_lint.txt
+    - hadolint dockerfile | tee -a  ms1_docker_lint.txt
   artifacts:
     paths:
       - ms1_docker_lint.txt
