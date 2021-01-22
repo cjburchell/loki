@@ -18,20 +18,32 @@ stages:
   - style
   - build
 
-go_vet:
+go-vet:
   stage: test
   script:
     - cd server
     - go fmt $(go list ./... | grep -v /vendor/)
     - go vet $(go list ./... | grep -v /vendor/)
 
-golint:
+go-lint:
   stage: style
-  script:
+  before_script:
     - go get -u golang.org/x/lint/golint/...
-    - go get -u github.com/tebeka/go2xunit
+  script:
     - out=$(golint $(go list ./... | grep -v "vendor"))
     - if [ "$out" ]; then echo "$out"; exit 1; fi
+
+docker-lint:
+  stage: style
+  inherit:
+    default: false
+  image: hadolint/hadolint:latest-debian
+  script:
+    - hadolin dockerfile | tee -a  ms1_docker_lint.txt
+  artifacts:
+    paths:
+      - ms1_docker_lint.txt
+    expire_in: 1 week
 
 docker-build-master:
   inherit:
