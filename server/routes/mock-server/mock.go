@@ -1,4 +1,4 @@
-package mockServer
+package mock_server
 
 import (
 	"fmt"
@@ -108,7 +108,7 @@ func (s *server) SetRoute(r *mux.Router) {
 	r.PathPrefix("/").HandlerFunc(s.defaultHandler)
 }
 
-// CreateServer creates the server
+//Setup the mock route
 func Setup(name string, defaultReply int, partialMockServerAddress string, log log.ILog) IServer {
 	server := &server{
 		name:     name,

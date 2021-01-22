@@ -1,4 +1,4 @@
-package clientroute
+package client_route
 
 import (
 	"mime"
@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+//Setup the client route
 func Setup(r *mux.Router, clientLocation string, logger log.ILog) {
 	route := r.PathPrefix("/@client").Subrouter()
 

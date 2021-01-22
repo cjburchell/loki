@@ -1,15 +1,16 @@
-package editMock
+package edit_mock
 
 import (
 	"encoding/json"
 	"github.com/cjburchell/loki/models"
-	"github.com/cjburchell/loki/routes/mockServer"
+	"github.com/cjburchell/loki/routes/mock-server"
 	log "github.com/cjburchell/uatu-go"
 	"github.com/gorilla/mux"
 	"net/http"
 )
 
-func Setup(r *mux.Router, logger log.ILog, server mockServer.IServer) {
+//Setup the edit mock route
+func Setup(r *mux.Router, logger log.ILog, server mock_server.IServer) {
 	route := r.PathPrefix("/@mock").Subrouter()
 
 	route.HandleFunc("/endpoint", func(writer http.ResponseWriter, _ *http.Request) {
@@ -41,7 +42,7 @@ func Setup(r *mux.Router, logger log.ILog, server mockServer.IServer) {
 	}).Methods("PUT")
 }
 
-func handleUpdateSettings(w http.ResponseWriter, request *http.Request, logger log.ILog, server mockServer.IServer) {
+func handleUpdateSettings(w http.ResponseWriter, request *http.Request, logger log.ILog, server mock_server.IServer) {
 	item := models.Settings{}
 	err := json.NewDecoder(request.Body).Decode(&item)
 	if err != nil {
@@ -54,7 +55,7 @@ func handleUpdateSettings(w http.ResponseWriter, request *http.Request, logger l
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func handleGetSettings(w http.ResponseWriter, logger log.ILog, server mockServer.IServer) {
+func handleGetSettings(w http.ResponseWriter, logger log.ILog, server mock_server.IServer) {
 	settings := server.GetSettings()
 
 	reply, _ := json.Marshal(settings)
@@ -67,7 +68,7 @@ func handleGetSettings(w http.ResponseWriter, logger log.ILog, server mockServer
 	}
 }
 
-func handleGetEndpoints(w http.ResponseWriter, logger log.ILog, server mockServer.IServer) {
+func handleGetEndpoints(w http.ResponseWriter, logger log.ILog, server mock_server.IServer) {
 	endpoints := server.GetEndpoints()
 
 	reply, _ := json.Marshal(endpoints)
@@ -80,10 +81,10 @@ func handleGetEndpoints(w http.ResponseWriter, logger log.ILog, server mockServe
 	}
 }
 
-func handleGetEndpoint(w http.ResponseWriter, request *http.Request, logger log.ILog, server mockServer.IServer) {
+func handleGetEndpoint(w http.ResponseWriter, request *http.Request, logger log.ILog, server mock_server.IServer) {
 	vars := mux.Vars(request)
-	endpointId := vars["id"]
-	endpoint, err := server.GetEndpoint(endpointId)
+	endpointID := vars["id"]
+	endpoint, err := server.GetEndpoint(endpointID)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		logger.Error(err)
@@ -99,10 +100,10 @@ func handleGetEndpoint(w http.ResponseWriter, request *http.Request, logger log.
 	}
 }
 
-func handleDeleteEndpoint(w http.ResponseWriter, request *http.Request, logger log.ILog, server mockServer.IServer) {
+func handleDeleteEndpoint(w http.ResponseWriter, request *http.Request, logger log.ILog, server mock_server.IServer) {
 	vars := mux.Vars(request)
-	endpointId := vars["id"]
-	err := server.DeleteEndpoint(endpointId)
+	endpointID := vars["id"]
+	err := server.DeleteEndpoint(endpointID)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		logger.Error(err)
@@ -111,7 +112,7 @@ func handleDeleteEndpoint(w http.ResponseWriter, request *http.Request, logger l
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func handleCreateEndpoint(w http.ResponseWriter, request *http.Request, logger log.ILog, server mockServer.IServer) {
+func handleCreateEndpoint(w http.ResponseWriter, request *http.Request, logger log.ILog, server mock_server.IServer) {
 	item := models.Endpoint{}
 	err := json.NewDecoder(request.Body).Decode(&item)
 	if err != nil {
@@ -130,9 +131,9 @@ func handleCreateEndpoint(w http.ResponseWriter, request *http.Request, logger l
 
 }
 
-func handleUpdateEndpoint(w http.ResponseWriter, request *http.Request, logger log.ILog, server mockServer.IServer) {
+func handleUpdateEndpoint(w http.ResponseWriter, request *http.Request, logger log.ILog, server mock_server.IServer) {
 	vars := mux.Vars(request)
-	endpointId := vars["id"]
+	endpointID := vars["id"]
 
 	item := models.Endpoint{}
 	err := json.NewDecoder(request.Body).Decode(&item)
@@ -142,7 +143,7 @@ func handleUpdateEndpoint(w http.ResponseWriter, request *http.Request, logger l
 		return
 	}
 
-	err = server.UpdateEndpoint(endpointId, item)
+	err = server.UpdateEndpoint(endpointID, item)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		logger.Error(err)

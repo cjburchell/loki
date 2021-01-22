@@ -2,6 +2,7 @@ package models
 
 import "encoding/json"
 
+//Endpoint model
 type Endpoint struct {
 	Path         string            `json:"path"`
 	Method       string            `json:"method"`
@@ -15,6 +16,7 @@ type Endpoint struct {
 	ReplyDelay   int               `json:"reply_delay"`
 }
 
+//Header item for the endpoint model
 type Header struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
