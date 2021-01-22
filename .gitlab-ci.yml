@@ -1,8 +1,8 @@
 image: golang:1.14
 
 variables:
-  VERSION: "1.2.0"
-  PRE_RELEASE_VERSION: "$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHA"
+  VERSION: 1.2.0
+  IMAGE_TAG: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:$CI_COMMIT_SHA
 
 before_script:
   - export GO_PROJECT_PATH="$GOPATH/src/github.com/$CI_PROJECT_NAMESPACE"
@@ -37,9 +37,9 @@ docker-lint:
   stage: style
   inherit:
     default: false
-  image: hadolint/hadolint:latest-debian
+  image: docker.io/hadolint/hadolint
   script:
-    - hadolin dockerfile | tee -a  ms1_docker_lint.txt
+    - /bin/hadolin dockerfile | tee -a  ms1_docker_lint.txt
   artifacts:
     paths:
       - ms1_docker_lint.txt
@@ -56,9 +56,11 @@ docker-build-master:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
     - docker build --pull -t "$CI_REGISTRY_IMAGE" .
-    - docker push "$CI_REGISTRY_IMAGE"
-    - docker tag "$CI_REGISTRY_IMAGE"
-    - docker push "$CI_REGISTRY_IMAGE:$VERSION"
+    - docker push $CI_REGISTRY_IMAGE
+    - docker tag $CI_REGISTRY_IMAGE/$VERSION
+    - docker push $CI_REGISTRY_IMAGE/$VERSION
+    - docker tag $IMAGE_TAG
+    - docker push $$IMAGE_TAG
   only:
     - master
 
@@ -72,7 +74,10 @@ docker-build:
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE:$PRE_RELEASE_VERSION" .
-    - docker push "$CI_REGISTRY_IMAGE:$PRE_RELEASE_VERSION"
+    - docker build --pull -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
   except:
     - master
+
+include:
+  - template: Container-Scanning.gitlab-ci.yml
