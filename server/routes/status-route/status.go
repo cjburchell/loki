@@ -1,4 +1,4 @@
-package status
+package statusroute
 
 import (
 	"github.com/cjburchell/uatu-go"
@@ -13,7 +13,7 @@ func Setup(r *mux.Router, logger log.ILog) {
 	}).Methods("GET")
 }
 
-func handleGetStatus(w http.ResponseWriter, r *http.Request, logger log.ILog) {
+func handleGetStatus(w http.ResponseWriter, _ *http.Request, logger log.ILog) {
 	w.Header().Set("Content-Type", "application/json")
 	_, err := w.Write([]byte("Ok"))
 	if err != nil {

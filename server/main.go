@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/cjburchell/loki/mock-server"
 	"github.com/cjburchell/loki/models"
-	clientroute "github.com/cjburchell/loki/routes/client-route"
-	"github.com/cjburchell/loki/routes/edit-mock"
-	"github.com/cjburchell/loki/routes/mock-server"
-	"github.com/cjburchell/loki/routes/status"
+	"github.com/cjburchell/loki/routes/client-route"
+	"github.com/cjburchell/loki/routes/edit-route"
+	"github.com/cjburchell/loki/routes/status-route"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"io"
@@ -49,12 +49,12 @@ func main() {
 func startServer(port int, endpoints []models.Endpoint, log log.ILog, settings settings.ISettings) {
 	r := mux.NewRouter()
 
-	status.Setup(r, log)
+	statusroute.Setup(r, log)
 
 	serviceName := settings.Get("ServerName", "Loki")
 	clientroute.Setup(r, settings.Get("ClientLocation", "client/dist/client"), log)
 
-	ms := mock_server.Setup(serviceName,
+	ms := mockserver.Setup(serviceName,
 		settings.GetInt("DefaultReply", http.StatusBadRequest),
 		settings.Get("PartialMockServerAddress", ""), log)
 
@@ -65,7 +65,7 @@ func startServer(port int, endpoints []models.Endpoint, log log.ILog, settings s
 		}
 	}
 
-	edit_mock.Setup(r, log, ms)
+	editroute.Setup(r, log, ms)
 	ms.SetRoute(r)
 
 	loggedRouter := handlers.CustomLoggingHandler(os.Stdout, r, func(writer io.Writer, params handlers.LogFormatterParams) {
