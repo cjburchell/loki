@@ -32,6 +32,17 @@ go-lint:
   script:
     - out=$(golint $(go list ./... | grep -v "vendor"))
     - if [ "$out" ]; then echo "$out"; exit 1; fi
+    -
+client-lint:
+  stage: style
+  inherit:
+    default: false
+  image: node:12.14-alpine
+  script:
+    - cd client
+    - npm install
+    - npm run lint
+
 
 docker-lint:
   stage: style
