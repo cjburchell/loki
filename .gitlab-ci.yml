@@ -32,7 +32,7 @@ go-lint:
   script:
     - out=$(golint $(go list ./... | grep -v "vendor"))
     - if [ "$out" ]; then echo "$out"; exit 1; fi
-    -
+
 client-lint:
   stage: style
   inherit:
@@ -42,7 +42,6 @@ client-lint:
     - cd client
     - npm install
     - npm run lint
-
 
 docker-lint:
   stage: style
